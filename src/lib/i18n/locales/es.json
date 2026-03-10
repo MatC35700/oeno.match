@@ -1,0 +1,87 @@
+{
+  "common": {
+    "next": "Siguiente",
+    "back": "Atrás",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "search": "Buscar",
+    "filter": "Filtrar"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Crear una cuenta",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "orContinueWith": "o continuar con",
+    "verifyEmail": "Revisa tu bandeja de entrada",
+    "createPassword": "Crea tu contraseña",
+    "passwordRules": "Mín. 10 caracteres, 1 número, 1 carácter especial"
+  },
+  "onboarding": {
+    "welcome": "Bienvenido a tu bodega",
+    "age": "¿Cuántos años tienes?",
+    "region": "Tus regiones vitícolas favoritas",
+    "experience": "Tu nivel de experiencia",
+    "goals": "¿Qué esperas de Oeno.match?"
+  },
+  "cellar": {
+    "title": "Mis vinos",
+    "myWines": "Mi bodega",
+    "wishlist": "Lista de deseos",
+    "history": "Historial",
+    "addWine": "Añadir un vino",
+    "scanBottle": "Escanear una botella",
+    "manualEntry": "Entrada manual",
+    "searchPlaceholder": "Busca un vino en tu bodega...",
+    "bottles": "botellas",
+    "estimatedValue": "Valor estimado"
+  },
+  "wine": {
+    "domain": "Bodega",
+    "cuvee": "Cuvée",
+    "color": "Color",
+    "vintage": "Cosecha",
+    "region": "Región",
+    "country": "País",
+    "rating": "Mi nota",
+    "maturity": "Fase de madurez",
+    "peakDate": "Fecha de apogeo",
+    "idealTemp": "Temperatura ideal",
+    "decantingTime": "Tiempo de decantación",
+    "personalNotes": "Notas personales",
+    "storageLocation": "Ubicación",
+    "storageRow": "Fila",
+    "producer": "Productor",
+    "quantity": "En bodega",
+    "buyMore": "Comprar más de este vino"
+  },
+  "maturity": {
+    "drink": "Listo para beber",
+    "peak": "Apogeo",
+    "wait": "Déjalo envejecer",
+    "sleep": "Ten paciencia..."
+  },
+  "pairing": {
+    "title": "Maridajes comida y vino",
+    "chooseDish": "Elegir un plato",
+    "chooseWine": "Elegir un vino",
+    "chooseIngredient": "Elegir un ingrediente",
+    "filters": "Refinar",
+    "classic": "Clásico",
+    "surprising": "Sorprendente",
+    "bold": "Audaz",
+    "inCellar": "Solo en bodega"
+  },
+  "home": {
+    "myCellar": "Mi bodega",
+    "discovery": "Descubrimiento del día",
+    "quiz": "Quiz vitícola"
+  },
+  "community": {
+    "title": "Comunidad",
+    "friends": "Amigos",
+    "favorites": "Favoritos",
+    "events": "Eventos"
+  }
+}

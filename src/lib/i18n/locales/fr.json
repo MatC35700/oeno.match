@@ -1,0 +1,87 @@
+{
+  "common": {
+    "next": "Suivant",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "search": "Rechercher",
+    "filter": "Filtrer"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "register": "Créer un compte",
+    "email": "Adresse email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "orContinueWith": "ou continuer avec",
+    "verifyEmail": "Vérifiez votre boîte mail",
+    "createPassword": "Créez votre mot de passe",
+    "passwordRules": "10 caractères min., 1 chiffre, 1 caractère spécial"
+  },
+  "onboarding": {
+    "welcome": "Bienvenue dans votre cave",
+    "age": "Quel âge avez-vous ?",
+    "region": "Vos régions viticoles préférées",
+    "experience": "Votre niveau d'expérience",
+    "goals": "Qu'attendez-vous d'Oeno.match ?"
+  },
+  "cellar": {
+    "title": "Mes vins",
+    "myWines": "Ma cave",
+    "wishlist": "Mes envies",
+    "history": "Historique",
+    "addWine": "Ajouter un vin",
+    "scanBottle": "Scanner une bouteille",
+    "manualEntry": "Saisie manuelle",
+    "searchPlaceholder": "Cherchez un vin dans votre cave...",
+    "bottles": "bouteilles",
+    "estimatedValue": "Valeur estimée"
+  },
+  "wine": {
+    "domain": "Domaine",
+    "cuvee": "Cuvée",
+    "color": "Couleur",
+    "vintage": "Millésime",
+    "region": "Région",
+    "country": "Pays",
+    "rating": "Ma note",
+    "maturity": "Phase de maturité",
+    "peakDate": "Date d'apogée",
+    "idealTemp": "Température idéale",
+    "decantingTime": "Temps de carafage",
+    "personalNotes": "Notes personnelles",
+    "storageLocation": "Emplacement",
+    "storageRow": "Rangée",
+    "producer": "Producteur",
+    "quantity": "En cave",
+    "buyMore": "Racheter ce vin"
+  },
+  "maturity": {
+    "drink": "À déguster",
+    "peak": "Apogée",
+    "wait": "À laisser vieillir",
+    "sleep": "Patience..."
+  },
+  "pairing": {
+    "title": "Accords mets & vins",
+    "chooseDish": "Choisir un plat",
+    "chooseWine": "Choisir un vin",
+    "chooseIngredient": "Choisir un ingrédient",
+    "filters": "Affiner",
+    "classic": "Classique",
+    "surprising": "Étonnant",
+    "bold": "Audacieux",
+    "inCellar": "En cave uniquement"
+  },
+  "home": {
+    "myCellar": "Ma cave",
+    "discovery": "Découverte du jour",
+    "quiz": "Quiz viticole"
+  },
+  "community": {
+    "title": "Communauté",
+    "friends": "Amis",
+    "favorites": "Coups de cœur",
+    "events": "Événements"
+  }
+}

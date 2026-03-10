@@ -1,0 +1,87 @@
+{
+  "common": {
+    "next": "Avanti",
+    "back": "Indietro",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "search": "Cerca",
+    "filter": "Filtra"
+  },
+  "auth": {
+    "login": "Accedi",
+    "register": "Crea un account",
+    "email": "Indirizzo email",
+    "password": "Password",
+    "forgotPassword": "Password dimenticata?",
+    "orContinueWith": "o continua con",
+    "verifyEmail": "Controlla la tua casella di posta",
+    "createPassword": "Crea la tua password",
+    "passwordRules": "Min. 10 caratteri, 1 numero, 1 carattere speciale"
+  },
+  "onboarding": {
+    "welcome": "Benvenuto nella tua cantina",
+    "age": "Quanti anni hai?",
+    "region": "Le tue regioni vinicole preferite",
+    "experience": "Il tuo livello di esperienza",
+    "goals": "Cosa ti aspetti da Oeno.match?"
+  },
+  "cellar": {
+    "title": "I miei vini",
+    "myWines": "La mia cantina",
+    "wishlist": "Lista dei desideri",
+    "history": "Cronologia",
+    "addWine": "Aggiungi un vino",
+    "scanBottle": "Scansiona una bottiglia",
+    "manualEntry": "Inserimento manuale",
+    "searchPlaceholder": "Cerca un vino nella tua cantina...",
+    "bottles": "bottiglie",
+    "estimatedValue": "Valore stimato"
+  },
+  "wine": {
+    "domain": "Tenuta",
+    "cuvee": "Cuvée",
+    "color": "Colore",
+    "vintage": "Annata",
+    "region": "Regione",
+    "country": "Paese",
+    "rating": "La mia nota",
+    "maturity": "Fase di maturità",
+    "peakDate": "Data di apice",
+    "idealTemp": "Temperatura ideale",
+    "decantingTime": "Tempo di decantazione",
+    "personalNotes": "Note personali",
+    "storageLocation": "Posizione",
+    "storageRow": "Fila",
+    "producer": "Produttore",
+    "quantity": "In cantina",
+    "buyMore": "Acquista altro di questo vino"
+  },
+  "maturity": {
+    "drink": "Pronto da bere",
+    "peak": "Apice",
+    "wait": "Lascialo invecchiare",
+    "sleep": "Abbi pazienza..."
+  },
+  "pairing": {
+    "title": "Abbinamenti cibo e vino",
+    "chooseDish": "Scegli un piatto",
+    "chooseWine": "Scegli un vino",
+    "chooseIngredient": "Scegli un ingrediente",
+    "filters": "Raffina",
+    "classic": "Classico",
+    "surprising": "Sorprendente",
+    "bold": "Audace",
+    "inCellar": "Solo in cantina"
+  },
+  "home": {
+    "myCellar": "La mia cantina",
+    "discovery": "Scoperta del giorno",
+    "quiz": "Quiz vitivinicolo"
+  },
+  "community": {
+    "title": "Comunità",
+    "friends": "Amici",
+    "favorites": "Preferiti",
+    "events": "Eventi"
+  }
+}

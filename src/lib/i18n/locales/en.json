@@ -1,0 +1,87 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search",
+    "filter": "Filter"
+  },
+  "auth": {
+    "login": "Sign in",
+    "register": "Create an account",
+    "email": "Email address",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "orContinueWith": "or continue with",
+    "verifyEmail": "Check your inbox",
+    "createPassword": "Create your password",
+    "passwordRules": "Min. 10 characters, 1 number, 1 special character"
+  },
+  "onboarding": {
+    "welcome": "Welcome to your cellar",
+    "age": "How old are you?",
+    "region": "Your favorite wine regions",
+    "experience": "Your experience level",
+    "goals": "What do you expect from Oeno.match?"
+  },
+  "cellar": {
+    "title": "My wines",
+    "myWines": "My cellar",
+    "wishlist": "Wishlist",
+    "history": "History",
+    "addWine": "Add a wine",
+    "scanBottle": "Scan a bottle",
+    "manualEntry": "Manual entry",
+    "searchPlaceholder": "Search a wine in your cellar...",
+    "bottles": "bottles",
+    "estimatedValue": "Estimated value"
+  },
+  "wine": {
+    "domain": "Estate",
+    "cuvee": "Cuvée",
+    "color": "Color",
+    "vintage": "Vintage",
+    "region": "Region",
+    "country": "Country",
+    "rating": "My rating",
+    "maturity": "Maturity phase",
+    "peakDate": "Peak date",
+    "idealTemp": "Ideal temperature",
+    "decantingTime": "Decanting time",
+    "personalNotes": "Personal notes",
+    "storageLocation": "Location",
+    "storageRow": "Row",
+    "producer": "Producer",
+    "quantity": "In cellar",
+    "buyMore": "Buy more of this wine"
+  },
+  "maturity": {
+    "drink": "Ready to drink",
+    "peak": "Peak",
+    "wait": "Let it age",
+    "sleep": "Be patient..."
+  },
+  "pairing": {
+    "title": "Food & wine pairings",
+    "chooseDish": "Choose a dish",
+    "chooseWine": "Choose a wine",
+    "chooseIngredient": "Choose an ingredient",
+    "filters": "Refine",
+    "classic": "Classic",
+    "surprising": "Surprising",
+    "bold": "Bold",
+    "inCellar": "In cellar only"
+  },
+  "home": {
+    "myCellar": "My cellar",
+    "discovery": "Discovery of the day",
+    "quiz": "Wine quiz"
+  },
+  "community": {
+    "title": "Community",
+    "friends": "Friends",
+    "favorites": "Favorites",
+    "events": "Events"
+  }
+}
