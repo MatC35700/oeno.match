@@ -34,4 +34,5 @@ export interface Wine {
   updated_at: string;
   consumed_at?: string | null; // When moved to history
   deleted_at?: string | null; // Soft delete
+  grape_varieties?: string[]; // Cépages (jusqu'à 10)
 }

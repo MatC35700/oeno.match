@@ -134,6 +134,9 @@
     "wineNotFound": "Vin introuvable",
     "favorites": "Favoris",
     "modifyWine": "Modifier le vin",
+    "modifyLabel": "Modifier",
+    "shareLabel": "Partager",
+    "deleteLabel": "Supprimer",
     "shareCommunity": "Partager avec la communauté",
     "addToFavorite": "Ajouter aux favoris",
     "removeFromFavorite": "Retirer des favoris"

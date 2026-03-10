@@ -12,18 +12,11 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { colors, typography, spacing } from '@/theme';
+import { WINE_COLORS } from '@/config/wineColors';
 import { Button } from '@/components/ui/Button';
 import type { WineColor, MaturityPhase } from '@/types/wine';
 import type { WineSortBy } from '@/lib/supabase/wines';
 import { REGION_LABELS } from '@/config/wineRegions';
-
-const WINE_COLORS: { value: WineColor; hex: string }[] = [
-  { value: 'red', hex: '#E45545' },
-  { value: 'white', hex: '#F5F0EB' },
-  { value: 'rose', hex: '#D4758B' },
-  { value: 'yellow', hex: '#C98F70' },
-  { value: 'orange', hex: '#C47A3A' },
-];
 
 const MATURITY_OPTIONS: MaturityPhase[] = ['drink', 'peak', 'wait', 'sleep'];
 

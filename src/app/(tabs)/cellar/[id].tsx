@@ -1,25 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
+import { RatingBar } from '@/components/ui/RatingBar';
 import { colors, spacing, typography, radius, shadows } from '@/theme';
 import { REGION_LABELS, COUNTRY_LABELS } from '@/config/wineRegions';
 import { getWineById } from '@/lib/supabase/wines';
 import { useCellarStore } from '@/stores/cellarStore';
+import { WINE_COLOR_HEX } from '@/config/wineColors';
 import type { Wine, WineColor } from '@/types/wine';
 
-const COLOR_DOT: Record<WineColor, string> = {
-  red: '#8B1A2B',
-  white: '#F5F0EB',
-  rose: '#D4758B',
-  yellow: '#C98F70',
-  orange: '#C47A3A',
-};
+const COLOR_DOT = WINE_COLOR_HEX;
 
 const HEADER_HEIGHT = 300;
 
@@ -31,6 +28,7 @@ export default function WineDetailScreen() {
   const [wine, setWine] = useState<Wine | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [cepagesModalVisible, setCepagesModalVisible] = useState(false);
 
   const updateWine = useCellarStore((s) => s.updateWine);
   const removeWine = useCellarStore((s) => s.removeWine);
@@ -45,6 +43,15 @@ export default function WineDetailScreen() {
       setLoading(false);
     });
   }, [id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!id) return;
+      getWineById(id).then(({ data }) => {
+        setWine(data ?? null);
+      });
+    }, [id])
+  );
 
   const handleQuantityChange = async (delta: number) => {
     if (!wine) return;
@@ -103,7 +110,10 @@ export default function WineDetailScreen() {
   const handleModify = () => {
     if (!wine) return;
     setMenuVisible(false);
-    router.push(`/(modals)/add-wine-manual?id=${wine.id}` as Href);
+    router.push({
+      pathname: '/(modals)/add-wine-manual',
+      params: { id: wine.id },
+    });
   };
 
   const handleShare = () => {
@@ -112,7 +122,7 @@ export default function WineDetailScreen() {
 
   if (loading || !wine) {
     return (
-      <ScreenWrapper>
+      <ScreenWrapper fullWidth>
         <View style={styles.loading}>
           <Text style={styles.loadingText}>
             {loading ? '...' : t('cellar.wineNotFound')}
@@ -127,7 +137,7 @@ export default function WineDetailScreen() {
 
   return (
     <View style={styles.root}>
-      <ScreenWrapper edges={['top', 'left', 'right']}>
+      <ScreenWrapper edges={['top', 'left', 'right']} fullWidth>
         {/* HERO */}
         <View style={styles.hero}>
           {wine.label_image_url ? (
@@ -190,7 +200,7 @@ export default function WineDetailScreen() {
                 onPress={handleShare}
               >
                 <Ionicons
-                  name="share-social-outline"
+                  name="share-outline"
                   size={18}
                   color="#FFFFFF"
                 />
@@ -253,35 +263,7 @@ export default function WineDetailScreen() {
                   color={colors.text.primary}
                 />
                 <Text style={styles.menuItemText}>
-                  {t('cellar.modifyWine')}
-                </Text>
-              </Pressable>
-              <Pressable
-                style={styles.menuItem}
-                onPress={handleToggleFavorite}
-              >
-                <Ionicons
-                  name={wine.is_favorite ? 'heart' : 'heart-outline'}
-                  size={20}
-                  color={colors.accent.primary}
-                />
-                <Text style={styles.menuItemText}>
-                  {wine.is_favorite
-                    ? t('cellar.removeFromFavorite')
-                    : t('cellar.addToFavorite')}
-                </Text>
-              </Pressable>
-              <Pressable
-                style={styles.menuItem}
-                onPress={handleShare}
-              >
-                <Ionicons
-                  name="share-outline"
-                  size={20}
-                  color={colors.text.primary}
-                />
-                <Text style={styles.menuItemText}>
-                  {t('cellar.shareCommunity')}
+                  {t('cellar.modifyLabel')}
                 </Text>
               </Pressable>
               <Pressable
@@ -299,10 +281,47 @@ export default function WineDetailScreen() {
                 <Text
                   style={[styles.menuItemText, styles.menuItemDanger]}
                 >
-                  {t('cellar.deleteWine')}
+                  {t('cellar.deleteLabel')}
                 </Text>
               </Pressable>
             </View>
+          </Pressable>
+        </Modal>
+
+        {/* Modal cépages */}
+        <Modal visible={cepagesModalVisible} transparent animationType="fade">
+          <Pressable
+            style={styles.menuOverlay}
+            onPress={() => setCepagesModalVisible(false)}
+          >
+            <Pressable style={styles.cepagesModalCard} onPress={() => {}}>
+              <View style={styles.cepagesModalHeader}>
+                <Text style={styles.cepagesModalTitle}>Cépages</Text>
+                <Pressable
+                  hitSlop={10}
+                  onPress={() => setCepagesModalVisible(false)}
+                  style={styles.cepagesModalClose}
+                >
+                  <Ionicons name="close" size={24} color={colors.text.primary} />
+                </Pressable>
+              </View>
+              <ScrollView
+                style={styles.cepagesModalList}
+                contentContainerStyle={styles.cepagesModalListInner}
+                showsVerticalScrollIndicator={false}
+              >
+                {((wine.grape_varieties?.length ?? 0) > 0
+                  ? wine.grape_varieties!
+                  : ['Cabernet Sauvignon']
+                )
+                  .slice(0, 10)
+                  .map((cepage, idx) => (
+                    <View key={`${cepage}-${idx}`} style={styles.cepagesModalItem}>
+                      <Text style={styles.cepagesModalItemText}>{cepage}</Text>
+                    </View>
+                  ))}
+              </ScrollView>
+            </Pressable>
           </Pressable>
         </Modal>
 
@@ -333,30 +352,23 @@ export default function WineDetailScreen() {
             {/* Quick stats row */}
             <View style={styles.quickStats}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{wine.vintage}</Text>
                 <Text style={styles.statLabel}>Millésime</Text>
+                <Text style={styles.statValue}>{wine.vintage}</Text>
               </View>
               <View style={styles.statItem}>
-                <View style={styles.statValueRow}>
-                  <View
-                    style={[styles.statDot, { backgroundColor: colorDot }]}
-                  />
-                  <Text style={styles.statValueInline}>
-                    {t(`wine.color.${wine.color}`, wine.color)}
-                  </Text>
-                </View>
                 <Text style={styles.statLabel}>Couleur</Text>
+                <View style={[styles.statDot, styles.statDotLarge, { backgroundColor: colorDot }]} />
               </View>
               <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Ma note</Text>
                 <Text style={[styles.statValue, { color: colors.accent.secondary }]}>
                   {rating.toFixed(1).replace('.', ',')}
                   <Text style={styles.statOutOf}>/10</Text>
                 </Text>
-                <Text style={styles.statLabel}>Ma note</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>×{wine.quantity}</Text>
                 <Text style={styles.statLabel}>En cave</Text>
+                <Text style={styles.statValue}>×{wine.quantity}</Text>
               </View>
             </View>
 
@@ -382,30 +394,55 @@ export default function WineDetailScreen() {
               <Text style={styles.sectionTitle}>Dégustation</Text>
               <View style={styles.infoGrid}>
                 <View style={styles.infoTile}>
-                  <Text style={styles.infoTileIcon}>🌡</Text>
-                  <Text style={styles.infoTileValue}>
-                    {wine.ideal_temp ?? 17}°C
-                  </Text>
                   <Text style={styles.infoTileLabel}>Température</Text>
+                  <View style={styles.infoTileValueRow}>
+                    <Text style={styles.infoTileIcon}>🌡</Text>
+                    <Text style={styles.infoTileValue}>
+                      {wine.ideal_temp ?? 17}°C
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.infoTile}>
-                  <Text style={styles.infoTileIcon}>⏱</Text>
-                  <Text style={styles.infoTileValue}>
-                    {wine.decanting_time ?? 90} min
-                  </Text>
                   <Text style={styles.infoTileLabel}>Carafage</Text>
+                  <View style={styles.infoTileValueRow}>
+                    <Text style={styles.infoTileIcon}>⏱</Text>
+                    <Text style={styles.infoTileValue}>
+                      {wine.decanting_time ?? 90} min
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.infoTile}>
-                  <Text style={styles.infoTileIcon}>🍇</Text>
-                  <Text style={styles.infoTileValue}>Cab. Sauv.</Text>
-                  <Text style={styles.infoTileLabel}>Cépage principal</Text>
+                  <Text style={styles.infoTileLabel}>Cépage(s)</Text>
+                  <View style={styles.infoTileCepagesRow}>
+                    <Text style={styles.infoTileValue} numberOfLines={1}>
+                      {(wine.grape_varieties && wine.grape_varieties[0])
+                        ? wine.grape_varieties[0]
+                        : 'Cab. Sauv.'}
+                    </Text>
+                    <Pressable
+                      style={styles.cepagesPlusBtn}
+                      hitSlop={8}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setCepagesModalVisible(true);
+                      }}
+                    >
+                        <Ionicons
+                          name="add"
+                          size={14}
+                          color={colors.green.mid}
+                        />
+                    </Pressable>
+                  </View>
                 </View>
                 <View style={styles.infoTile}>
-                  <Text style={styles.infoTileIcon}>📍</Text>
-                  <Text style={styles.infoTileValue}>
-                    {REGION_LABELS[wine.region] ?? wine.region}
-                  </Text>
                   <Text style={styles.infoTileLabel}>Région</Text>
+                  <View style={styles.infoTileValueRow}>
+                    <Text style={styles.infoTileIcon}>📍</Text>
+                    <Text style={styles.infoTileValue}>
+                      {REGION_LABELS[wine.region] ?? wine.region}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -421,15 +458,14 @@ export default function WineDetailScreen() {
                     </Text>
                     <Text style={styles.ratingSlash}> / 10</Text>
                   </View>
-                  <View style={styles.ratingStars}>
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Ionicons
-                        key={i}
-                        name={i <= 4 ? 'star' : 'star-outline'}
-                        size={14}
-                        color={i <= 4 ? colors.accent.secondary : '#E0D8D0'}
-                      />
-                    ))}
+                  <View style={styles.ratingBarWrap}>
+                    <RatingBar
+                      value={rating}
+                      onChange={() => {}}
+                      disabled
+                      height={28}
+                      borderRadius={8}
+                    />
                   </View>
                 </View>
                 <Text style={styles.notesText}>
@@ -512,17 +548,6 @@ export default function WineDetailScreen() {
 
         {/* Barre d’actions en bas */}
         <View style={styles.bottomBar}>
-          <Pressable
-            style={styles.bottomIconBtn}
-            hitSlop={8}
-            onPress={handleShare}
-          >
-            <Ionicons
-              name="share-social-outline"
-              size={20}
-              color={colors.text.secondary}
-            />
-          </Pressable>
           <Pressable style={styles.bottomPrimary} hitSlop={6}>
             <Ionicons
               name="sparkles-outline"
@@ -641,7 +666,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    paddingTop: 52,
+    paddingTop: 8,
     paddingHorizontal: 16,
     paddingBottom: 12,
     flexDirection: 'row',
@@ -757,7 +782,7 @@ const styles = StyleSheet.create({
   statItem: {
     flex: 1,
     alignItems: 'center',
-    gap: 2,
+    gap: 6,
   },
   statValue: {
     fontSize: 17,
@@ -790,6 +815,12 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     marginRight: 3,
+  },
+  statDotLarge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 0,
   },
   section: {
     paddingHorizontal: 20,
@@ -857,22 +888,41 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    gap: 3,
-  },
-  infoTileIcon: {
-    fontSize: 16,
-  },
-  infoTileValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-    marginTop: 4,
+    gap: 6,
   },
   infoTileLabel: {
     fontSize: 11,
     color: colors.text.tertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
+  },
+  infoTileValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  infoTileCepagesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 24,
+  },
+  cepagesPlusBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(109, 151, 46, 0.12)',
+  },
+  infoTileIcon: {
+    fontSize: 16,
+  },
+  infoTileValue: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.primary,
   },
   ratingBlock: {
     backgroundColor: colors.background.tertiary,
@@ -885,6 +935,11 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   ratingLeft: {},
+  ratingBarWrap: {
+    width: '100%',
+    minWidth: 160,
+    marginTop: 8,
+  },
   ratingNumberRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -900,11 +955,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text.tertiary,
     marginLeft: 4,
-  },
-  ratingStars: {
-    flexDirection: 'row',
-    gap: 4,
-    marginTop: 4,
   },
   notesText: {
     flex: 1,
@@ -1057,7 +1107,7 @@ const styles = StyleSheet.create({
   menuDropdown: {
     backgroundColor: colors.background.primary,
     borderRadius: radius.xl,
-    minWidth: 220,
+    minWidth: 160,
     overflow: 'hidden',
     ...shadows.card,
   },
@@ -1074,5 +1124,49 @@ const styles = StyleSheet.create({
   },
   menuItemDanger: {
     color: colors.error,
+  },
+  cepagesModalCard: {
+    marginHorizontal: 24,
+    marginTop: 80,
+    maxHeight: '70%',
+    backgroundColor: colors.background.primary,
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+    ...shadows.card,
+  },
+  cepagesModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.08)',
+  },
+  cepagesModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  cepagesModalClose: {
+    padding: 4,
+  },
+  cepagesModalList: {
+    maxHeight: 320,
+  },
+  cepagesModalListInner: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  cepagesModalItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  cepagesModalItemText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.text.primary,
   },
 });

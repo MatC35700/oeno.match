@@ -288,7 +288,7 @@ export default function OnboardingScreen() {
   const canNext = () => {
     switch (step) {
       case 0: return age >= 18;
-      case 1: return regions.length > 0;
+      case 1: return true; // Régions optionnelles
       case 2: return experience !== null;
       case 3: return goals.length > 0;
       case 4: return true;
@@ -455,120 +455,124 @@ export default function OnboardingScreen() {
         ))}
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {step === 0 && (
-          <Animated.View key="0" entering={FadeIn} exiting={FadeOut}>
-            <Text style={styles.title}>{t('onboarding.age')}</Text>
-            <View style={styles.wheelContainer}>
-              <WheelPickerExpo
-                height={180}
-                width={width - spacing.screen * 2}
-                initialSelectedIndex={age - 18}
-                items={Array.from({ length: 103 }, (_, i) => ({
-                  label: String(i + 18),
-                  value: String(i + 18),
-                }))}
-                onChange={({ item }) => setAge(Number(item.value))}
-                backgroundColor={colors.background.primary}
-                selectedStyle={{ borderColor: colors.accent.primary, borderWidth: 2 }}
-                haptics
-              />
-            </View>
-          </Animated.View>
-        )}
+      {step === 0 ? (
+        <View style={styles.scroll}>
+          <View style={styles.scrollContent}>
+            <Animated.View key="0" entering={FadeIn} exiting={FadeOut}>
+              <Text style={styles.title}>{t('onboarding.age')}</Text>
+              <View style={styles.wheelContainer}>
+                <WheelPickerExpo
+                  height={180}
+                  width={width - spacing.screen * 2}
+                  initialSelectedIndex={age - 18}
+                  items={Array.from({ length: 103 }, (_, i) => ({
+                    label: String(i + 18),
+                    value: String(i + 18),
+                  }))}
+                  onChange={({ item }) => setAge(Number(item.value))}
+                  backgroundColor={colors.background.primary}
+                  selectedStyle={{ borderColor: colors.accent.primary, borderWidth: 2 }}
+                  haptics
+                />
+              </View>
+            </Animated.View>
+          </View>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {step === 1 && (
+            <RegionsStep
+              regions={regions}
+              onToggle={toggleRegion}
+              filterCountry={regionFilterCountry}
+              onFilterCountry={setRegionFilterCountry}
+              t={t}
+            />
+          )}
 
-        {step === 1 && (
-          <RegionsStep
-            regions={regions}
-            onToggle={toggleRegion}
-            filterCountry={regionFilterCountry}
-            onFilterCountry={setRegionFilterCountry}
-            t={t}
-          />
-        )}
+          {step === 2 && (
+            <Animated.View key="2" entering={SlideInRight} exiting={SlideOutLeft}>
+              <Text style={styles.title}>{t('onboarding.experience')}</Text>
+              <View style={styles.cards}>
+                {EXPERIENCE_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setExperience(opt.value);
+                    }}
+                  >
+                    <Card
+                      style={[
+                        styles.expCard,
+                        experience === opt.value && styles.expCardSelected,
+                      ]}
+                    >
+                      <Ionicons
+                        name={opt.icon as keyof typeof Ionicons.glyphMap}
+                        size={28}
+                        color={experience === opt.value ? colors.accent.primary : colors.text.secondary}
+                      />
+                      <View style={styles.expTextWrap}>
+                        <Text
+                          style={[
+                            styles.expTitle,
+                            experience === opt.value && styles.expTitleSelected,
+                          ]}
+                        >
+                          {t(opt.labelKey)}
+                        </Text>
+                        <Text style={styles.expDesc}>{t(opt.descKey)}</Text>
+                      </View>
+                    </Card>
+                  </Pressable>
+                ))}
+              </View>
+            </Animated.View>
+          )}
 
-        {step === 2 && (
-          <Animated.View key="2" entering={SlideInRight} exiting={SlideOutLeft}>
-            <Text style={styles.title}>{t('onboarding.experience')}</Text>
-            <View style={styles.cards}>
-              {EXPERIENCE_OPTIONS.map((opt) => (
-                <Pressable
-                  key={opt.value}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setExperience(opt.value);
-                  }}
-                >
-                  <Card
+          {step === 3 && (
+            <Animated.View key="3" entering={SlideInRight} exiting={SlideOutLeft}>
+              <Text style={styles.title}>{t('onboarding.goals')}</Text>
+              <Text style={styles.goalsSubtitle}>{t('onboarding.goalsSubtitle')}</Text>
+              <View style={styles.goalsGrid}>
+                {GOAL_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    onPress={() => toggleGoal(opt.value)}
                     style={[
-                      styles.expCard,
-                      experience === opt.value && styles.expCardSelected,
+                      styles.goalCard,
+                      goals.includes(opt.value) && styles.goalCardSelected,
                     ]}
                   >
-                    <Ionicons
-                      name={opt.icon as keyof typeof Ionicons.glyphMap}
-                      size={28}
-                      color={experience === opt.value ? colors.accent.primary : colors.text.secondary}
-                    />
-                    <View style={styles.expTextWrap}>
-                      <Text
-                        style={[
-                          styles.expTitle,
-                          experience === opt.value && styles.expTitleSelected,
-                        ]}
-                      >
-                        {t(opt.labelKey)}
-                      </Text>
-                      <Text style={styles.expDesc}>{t(opt.descKey)}</Text>
+                    <View style={[styles.goalIconWrap, goals.includes(opt.value) && styles.goalIconWrapSelected]}>
+                      <Ionicons
+                        name={opt.icon as keyof typeof Ionicons.glyphMap}
+                        size={24}
+                        color={goals.includes(opt.value) ? colors.accent.primary : colors.text.secondary}
+                      />
                     </View>
-                  </Card>
-                </Pressable>
-              ))}
-            </View>
-          </Animated.View>
-        )}
-
-        {step === 3 && (
-          <Animated.View key="3" entering={SlideInRight} exiting={SlideOutLeft}>
-            <Text style={styles.title}>{t('onboarding.goals')}</Text>
-            <Text style={styles.goalsSubtitle}>{t('onboarding.goalsSubtitle')}</Text>
-            <View style={styles.goalsGrid}>
-              {GOAL_OPTIONS.map((opt) => (
-                <Pressable
-                  key={opt.value}
-                  onPress={() => toggleGoal(opt.value)}
-                  style={[
-                    styles.goalCard,
-                    goals.includes(opt.value) && styles.goalCardSelected,
-                  ]}
-                >
-                  <View style={[styles.goalIconWrap, goals.includes(opt.value) && styles.goalIconWrapSelected]}>
-                    <Ionicons
-                      name={opt.icon as keyof typeof Ionicons.glyphMap}
-                      size={24}
-                      color={goals.includes(opt.value) ? colors.accent.primary : colors.text.secondary}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.goalLabel,
-                      goals.includes(opt.value) && styles.goalLabelSelected,
-                    ]}
-                    numberOfLines={2}
-                  >
-                    {t(opt.labelKey)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </Animated.View>
-        )}
-      </ScrollView>
+                    <Text
+                      style={[
+                        styles.goalLabel,
+                        goals.includes(opt.value) && styles.goalLabelSelected,
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {t(opt.labelKey)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </Animated.View>
+          )}
+        </ScrollView>
+      )}
 
       <View style={styles.footer}>
         <Pressable onPress={handleBack} style={styles.backBtn}>

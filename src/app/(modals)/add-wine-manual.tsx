@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams, useGlobalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,19 +24,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
+import { RatingBar } from '@/components/ui/RatingBar';
 import { colors, typography, spacing } from '@/theme';
 import { useCellarStore } from '@/stores/cellarStore';
 import { useUserId } from '@/stores/authStore';
 import { REGIONS_BY_COUNTRY, COUNTRY_LABELS, REGION_LABELS } from '@/config/wineRegions';
-import type { WineColor, MaturityPhase } from '@/types/wine';
-
-const WINE_COLORS: { value: WineColor; hex: string }[] = [
-  { value: 'red', hex: '#E45545' },
-  { value: 'white', hex: '#F5F0EB' },
-  { value: 'rose', hex: '#D4758B' },
-  { value: 'yellow', hex: '#C98F70' },
-  { value: 'orange', hex: '#C47A3A' },
-];
+import { getWineById } from '@/lib/supabase/wines';
+import { WINE_COLORS } from '@/config/wineColors';
+import type { WineColor, MaturityPhase, Wine } from '@/types/wine';
 
 const currentYear = new Date().getFullYear();
 const VINTAGE_YEARS = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => currentYear - i);
@@ -64,19 +59,27 @@ type WineFormData = z.infer<typeof wineSchema>;
 export default function AddWineManualScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const localParams = useLocalSearchParams<{ id?: string | string[] }>();
+  const globalParams = useGlobalSearchParams<{ id?: string | string[] }>();
+  const id = localParams.id ?? globalParams.id;
   const userId = useUserId();
   const addWine = useCellarStore((s) => s.addWine);
+  const updateWineStore = useCellarStore((s) => s.updateWine);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [storageExpanded, setStorageExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const wineId = typeof id === 'string' ? id : Array.isArray(id) ? id?.[0] : undefined;
+  const isEditing = Boolean(wineId);
+
   const {
     control,
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<WineFormData>({
     resolver: zodResolver(wineSchema),
@@ -107,6 +110,39 @@ export default function AddWineManualScreen() {
       setValue('region', regions[0]);
     }
   }, [country, regions, currentRegion, setValue]);
+
+  React.useEffect(() => {
+    if (!isEditing || !wineId) return;
+
+    (async () => {
+      const { data } = await getWineById(wineId);
+      if (!data) return;
+
+      const countryEntry = Object.entries(COUNTRY_LABELS).find(
+        ([, label]) => label === data.country
+      );
+      const countryCode = countryEntry?.[0] ?? 'fr';
+
+      reset({
+        domain_name: data.domain_name,
+        cuvee_name: data.cuvee_name ?? '',
+        appellation: data.appellation ?? '',
+        color: data.color,
+        country: countryCode,
+        region: data.region,
+        vintage: data.vintage,
+        quantity: data.quantity,
+        user_rating: data.user_rating,
+        personal_notes: data.personal_notes ?? '',
+        notes_public: data.notes_public,
+        producer_name: data.producer_name ?? '',
+        storage_location: data.storage_location ?? '',
+        storage_row: data.storage_row ?? '',
+      });
+      setTags(data.tags ?? []);
+      setImageUri(data.label_image_url ?? null);
+    })();
+  }, [wineId, isEditing, reset]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -141,6 +177,45 @@ export default function AddWineManualScreen() {
     if (!userId) return;
     setSaving(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    if (isEditing && wineId) {
+      const updates: Partial<Wine> = {
+        domain_name: data.domain_name,
+        cuvee_name: data.cuvee_name || undefined,
+        appellation: data.appellation || undefined,
+        color: data.color,
+        country: COUNTRY_LABELS[data.country] ?? data.country,
+        region: data.region,
+        vintage: data.vintage,
+        quantity: data.quantity,
+        user_rating: data.user_rating,
+        tags: tags.length ? tags : undefined,
+        personal_notes: data.personal_notes,
+        notes_public: data.notes_public ?? false,
+        producer_name: data.producer_name,
+        storage_location: data.storage_location,
+        storage_row: data.storage_row,
+      };
+      const cleanUpdates: Partial<Wine> = {};
+      (Object.keys(updates) as (keyof Wine)[]).forEach((key) => {
+        if (updates[key] !== undefined) {
+          (cleanUpdates as Record<string, unknown>)[key] = updates[key];
+        }
+      });
+      const ok = await updateWineStore(wineId, cleanUpdates);
+      setSaving(false);
+      if (ok.ok) {
+        router.back();
+      } else {
+        Alert.alert(
+          t('common.error') || 'Erreur',
+          (t('cellar.updateError') || 'Impossible d’enregistrer les modifications. Réessayez.') +
+            (ok.error?.message ? `\n\n${ok.error.message}` : '')
+        );
+      }
+      return;
+    }
+
     const wine = await addWine(
       userId,
       {
@@ -403,18 +478,12 @@ export default function AddWineManualScreen() {
               render={({ field: { value, onChange } }) => (
                 <View style={styles.field}>
                   <Text style={styles.label}>{t('wine.rating')}</Text>
-                  <View style={styles.ratingRow}>
-                    {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                      <Pressable
-                        key={n}
-                        onPress={() => onChange(n)}
-                        style={[
-                          styles.ratingDot,
-                          (value ?? 0) >= n && styles.ratingDotFilled,
-                        ]}
-                      />
-                    ))}
-                  </View>
+                  <RatingBar
+                    value={value ?? 0}
+                    onChange={(v) => onChange(v)}
+                    height={44}
+                    borderRadius={10}
+                  />
                   <Text style={styles.ratingValue}>{(value ?? 0).toFixed(1)}/10</Text>
                 </View>
               )}
@@ -684,20 +753,6 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     minWidth: 40,
     textAlign: 'center',
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    gap: 4,
-    marginBottom: spacing.sm,
-  },
-  ratingDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.background.tertiary,
-  },
-  ratingDotFilled: {
-    backgroundColor: colors.accent.primary,
   },
   ratingValue: {
     ...typography.h2,

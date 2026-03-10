@@ -44,7 +44,7 @@ interface CellarState {
   isLoading: boolean;
   fetchWines: (userId: string) => Promise<void>;
   addWine: (userId: string, wine: Omit<AddWineInput, 'user_id'>, imageUri?: string) => Promise<Wine | null>;
-  updateWine: (wineId: string, updates: Partial<Wine>) => Promise<void>;
+  updateWine: (wineId: string, updates: Partial<Wine>) => Promise<{ ok: boolean; error?: Error }>;
   removeWine: (wineId: string) => Promise<void>;
   setFilters: (filters: Partial<CellarFilters>) => void;
   updateQuantity: (wineId: string, delta: number) => Promise<void>;
@@ -93,7 +93,11 @@ export const useCellarStore = create<CellarState>((set, get) => ({
         wines: state.wines.map((w) => (w.id === wineId ? { ...w, ...data } : w)),
         wishlist: state.wishlist.map((w) => (w.id === wineId ? { ...w, ...data } : w)),
       }));
+      return { ok: true };
     }
+    const err =
+      error instanceof Error ? error : new Error(error?.message ?? 'Unknown error');
+    return { ok: false, error: err };
   },
 
   removeWine: async (wineId: string) => {

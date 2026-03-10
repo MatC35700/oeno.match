@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, shadows } from '@/theme';
 
 const TAB_ICON_SIZE = 22;
-const TAB_BAR_BASE_HEIGHT = 56;
+const TAB_BAR_BASE_HEIGHT = 32;
 
 function TabBarIcon({
   name,
@@ -39,7 +39,8 @@ export default function TabLayout() {
           backgroundColor: colors.background.primary,
           height: tabBarHeight,
           paddingBottom: insets.bottom,
-          paddingTop: 8,
+          paddingTop: 2,
+          minHeight: tabBarHeight,
           ...shadows.tabBar,
         },
         tabBarShowLabel: true,
@@ -47,9 +48,11 @@ export default function TabLayout() {
           fontSize: 10,
           fontFamily: 'Outfit_400Regular',
           textTransform: 'none',
+          marginTop: 2,
         },
         tabBarItemStyle: {
-          paddingTop: 4,
+          paddingTop: 2,
+          paddingBottom: 2,
         },
       }}
     >

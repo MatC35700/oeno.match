@@ -6,11 +6,14 @@ import { colors, spacing } from '@/theme';
 interface ScreenWrapperProps extends ViewProps {
   children: React.ReactNode;
   edges?: ('top' | 'bottom' | 'left' | 'right')[];
+  /** Pas de marge horizontale : le contenu remplit toute la largeur */
+  fullWidth?: boolean;
 }
 
 export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   children,
   edges = ['top', 'left', 'right'],
+  fullWidth = false,
   style,
   ...props
 }) => {
@@ -20,7 +23,7 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
       edges={edges}
       {...props}
     >
-      <View style={styles.content}>{children}</View>
+      <View style={[styles.content, fullWidth && styles.contentFullWidth]}>{children}</View>
     </SafeAreaView>
   );
 };
@@ -34,5 +37,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.screen,
     paddingTop: spacing.lg,
+  },
+  contentFullWidth: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
   },
 });

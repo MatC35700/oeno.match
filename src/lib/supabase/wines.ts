@@ -176,10 +176,15 @@ async function uploadLabelImage(
 }
 
 export async function updateWine(wineId: string, updates: Partial<Wine>) {
+  const clean: Record<string, unknown> = {};
+  Object.entries(updates).forEach(([k, v]) => {
+    if (v !== undefined) clean[k] = v;
+  });
+  clean.updated_at = new Date().toISOString();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('wines')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update(clean)
     .eq('id', wineId)
     .is('deleted_at', null)
     .select()
