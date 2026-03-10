@@ -10,10 +10,14 @@ export const spacing = {
   card: 16, // Padding intérieur des cards
 } as const;
 
+/** Arrondis élégants, lignes douces */
 export const radius = {
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 24,
+  xl: 20,
+  /** Cartes type "sheet" (grands coins supérieurs) */
+  sheet: 24,
+  pill: 9999,
   full: 9999,
 } as const;

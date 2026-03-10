@@ -8,7 +8,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { colors, typography, radius, spacing, shadows } from '@/theme';
+import { colors, typography, spacing, shadows, radius } from '@/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'chip';
 
@@ -16,16 +16,18 @@ interface ButtonProps extends Omit<PressableProps, 'style'> {
   variant?: ButtonVariant;
   children: React.ReactNode;
   disabled?: boolean;
+  fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
-const HEIGHT_PRIMARY = 48;
+const HEIGHT_PRIMARY = 50;
 const HEIGHT_CHIP = 32;
 
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   children,
   disabled = false,
+  fullWidth = false,
   style,
   ...props
 }) => {
@@ -46,6 +48,7 @@ export const Button: React.FC<ButtonProps> = ({
         disabled && styles.disabled,
         isPrimary && pressed && !disabled && styles.pressed,
         hasMutedPress && pressed && styles.pressedMuted,
+        fullWidth && styles.fullWidth,
         style,
       ]}
       disabled={disabled}
@@ -71,17 +74,17 @@ const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     minHeight: HEIGHT_PRIMARY,
     paddingHorizontal: spacing.xxl,
   },
   primary: {
     backgroundColor: colors.accent.primary,
-    ...shadows.subtle,
+    ...shadows.buttonPrimary,
   },
   secondary: {
     backgroundColor: 'transparent',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.accent.primary,
   },
   ghost: {
@@ -91,7 +94,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.tertiary,
     minHeight: HEIGHT_CHIP,
     paddingHorizontal: 12,
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
   },
   disabled: {
     opacity: 0.5,
@@ -102,19 +105,24 @@ const styles = StyleSheet.create({
   pressedMuted: {
     backgroundColor: colors.accent.muted,
   },
+  fullWidth: {
+    width: '100%',
+    alignSelf: 'stretch',
+  },
   text: {
     fontFamily: 'Outfit_600SemiBold',
-    fontSize: 16,
+    fontSize: 15,
+    textTransform: 'none',
   },
   textPrimary: {
-    color: colors.text.inverse,
+    color: colors.text.onAccent,
   },
   textSecondary: {
     color: colors.accent.primary,
     fontFamily: 'Outfit_500Medium',
   },
   textGhost: {
-    color: colors.accent.primary,
+    color: colors.text.secondary,
     fontFamily: 'Outfit_500Medium',
   },
   textChip: {

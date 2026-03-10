@@ -7,13 +7,15 @@ import {
   Pressable,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, typography, spacing, radius, shadows } from '@/theme';
+import { colors, typography, spacing, shadows, radius } from '@/theme';
+import { REGION_LABELS, COUNTRY_LABELS } from '@/config/wineRegions';
 import { MaturityBadge } from './MaturityBadge';
 import { Badge } from './Badge';
 import type { Wine } from '@/types/wine';
@@ -23,19 +25,20 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CARD_HEIGHT = SCREEN_HEIGHT * 0.25;
 
 const WINE_COLOR_GRADIENT: Record<WineColor, [string, string]> = {
-  red: ['#811C35', '#5C1528'],
-  white: ['#F5E6C8', '#D4C4A0'],
+  red: ['#E45545', '#B84335'],
+  white: ['#F5F0EB', '#E5DFD8'],
   rose: ['#D4758B', '#B85A6E'],
-  yellow: ['#C8A951', '#9A8239'],
+  yellow: ['#C98F70', '#A67A5A'],
   orange: ['#C47A3A', '#9A5E2A'],
 };
 
 interface BottleCardProps {
   wine: Wine;
   onPress?: () => void;
+  onFavoritePress?: () => void;
 }
 
-export const BottleCard: React.FC<BottleCardProps> = ({ wine, onPress }) => {
+export const BottleCard: React.FC<BottleCardProps> = ({ wine, onPress, onFavoritePress }) => {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -87,12 +90,43 @@ export const BottleCard: React.FC<BottleCardProps> = ({ wine, onPress }) => {
               </Text>
             )}
             <Text style={styles.region} numberOfLines={1}>
-              {wine.region}, {wine.country}
+              {REGION_LABELS[wine.region] ?? wine.region}, {COUNTRY_LABELS[wine.country] ?? wine.country}
             </Text>
-            <View style={styles.badges}>
-              <Badge>{wine.vintage}</Badge>
-              <Badge>{wine.quantity} btl</Badge>
-              <MaturityBadge phase={wine.maturity_phase} />
+            {wine.appellation ? (
+              <Text style={styles.appellation} numberOfLines={1}>
+                {wine.appellation}
+              </Text>
+            ) : null}
+            <View style={styles.badgesRow}>
+              <View style={styles.badges}>
+                <Badge>{wine.vintage}</Badge>
+                <Badge>{wine.quantity} btl</Badge>
+                <MaturityBadge phase={wine.maturity_phase} />
+              </View>
+              {onFavoritePress ? (
+                <Pressable
+                  onPress={(e) => {
+                    e?.stopPropagation?.();
+                    onFavoritePress();
+                  }}
+                  hitSlop={8}
+                  style={styles.favoriteBtn}
+                >
+                  <Ionicons
+                    name={wine.is_favorite ? 'star' : 'star-outline'}
+                    size={22}
+                    color={wine.is_favorite ? colors.accent.primary : colors.text.tertiary}
+                  />
+                </Pressable>
+              ) : (
+                <View style={styles.favoriteBtn}>
+                  <Ionicons
+                    name={wine.is_favorite ? 'star' : 'star-outline'}
+                    size={22}
+                    color={wine.is_favorite ? colors.accent.primary : colors.text.tertiary}
+                  />
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -109,8 +143,9 @@ const styles = StyleSheet.create({
   pressable: {
     flex: 1,
     backgroundColor: colors.background.secondary,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     overflow: 'hidden',
+    borderWidth: 0,
     ...shadows.card,
   },
   content: {
@@ -133,8 +168,8 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 40,
     height: 80,
-    backgroundColor: 'rgba(46, 24, 9, 0.08)',
-    borderRadius: 4,
+    backgroundColor: 'rgba(28, 26, 26, 0.06)',
+    borderRadius: radius.sm,
   },
   info: {
     flex: 1,
@@ -153,9 +188,24 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.text.tertiary,
   },
+  appellation: {
+    ...typography.bodySmall,
+    color: colors.text.tertiary,
+    marginTop: 2,
+  },
+  badgesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
   badges: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+    flex: 1,
+  },
+  favoriteBtn: {
+    padding: 4,
   },
 });

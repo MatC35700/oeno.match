@@ -15,7 +15,7 @@ interface AuthState {
 const initialState = {
   user: null,
   profile: null,
-  isLoading: false,
+  isLoading: true,
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -25,3 +25,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   setLoading: (isLoading) => set({ isLoading }),
   reset: () => set(initialState),
 }));
+
+/** Selector for userId - use when you only need the user id. */
+export const useUserId = () => useAuthStore((state) => state.user?.id ?? null);

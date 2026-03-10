@@ -4,27 +4,26 @@ import { useAuthStore } from '@/stores/authStore';
 import { fetchProfile } from '@/lib/supabase/profiles';
 
 export function useAuth() {
-  const { user, profile, setUser, setProfile, setLoading } = useAuthStore();
+  const { user, profile, isLoading, setUser, setProfile, setLoading } = useAuthStore();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    setLoading(true);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user?.id) {
-        fetchProfile(session.user.id).then(({ data: profileData }) => {
-          setProfile(profileData ?? null);
-        });
+        const { data: profileData } = await fetchProfile(session.user.id);
+        setProfile(profileData ?? null);
       } else {
         setProfile(null);
       }
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user?.id) {
-        fetchProfile(session.user.id).then(({ data: profileData }) => {
-          setProfile(profileData ?? null);
-        });
+        const { data: profileData } = await fetchProfile(session.user.id);
+        setProfile(profileData ?? null);
       } else {
         setProfile(null);
       }
@@ -35,5 +34,5 @@ export function useAuth() {
     };
   }, [setUser, setProfile, setLoading]);
 
-  return { user, profile, isAuthenticated: !!user };
+  return { user, profile, isAuthenticated: !!user, isLoading };
 }

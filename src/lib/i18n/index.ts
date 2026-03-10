@@ -26,4 +26,10 @@ i18n.use(initReactI18next).init({
   },
 });
 
+export type SupportedLanguage = 'fr' | 'en' | 'es' | 'it' | 'de';
+
+export function setAppLanguage(lang: SupportedLanguage): void {
+  i18n.changeLanguage(lang);
+}
+
 export default i18n;

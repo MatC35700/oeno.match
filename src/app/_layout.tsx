@@ -21,7 +21,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const router = useRouter();
-  const { profile, isAuthenticated } = useAuth();
+  const { profile, isAuthenticated, isLoading } = useAuth();
 
   const [fontsLoaded] = useFonts({
     Outfit_400Regular,
@@ -37,21 +37,20 @@ export default function RootLayout() {
   }, [fontsLoaded]);
 
   useEffect(() => {
-    if (!fontsLoaded) return;
-    // Redirection auth : pour le dev, on affiche les tabs par défaut
-    // Décommenter pour activer la logique auth complète
-    // if (!isAuthenticated) {
-    //   router.replace('/(auth)/welcome');
-    // } else if (!profile?.onboarding_completed) {
-    //   router.replace('/(auth)/onboarding');
-    // } else {
-    router.replace('/(tabs)' as Href);
-    // }
-  }, [fontsLoaded, router]);
+    if (!fontsLoaded || isLoading) return;
+
+    if (!isAuthenticated) {
+      router.replace('/(auth)/welcome' as Href);
+    } else if (!profile?.onboarding_completed) {
+      router.replace('/(auth)/onboarding' as Href);
+    } else {
+      router.replace('/(tabs)' as Href);
+    }
+  }, [isAuthenticated, profile?.onboarding_completed, isLoading, fontsLoaded, router]);
 
   if (!fontsLoaded) {
-return (
-    <View style={styles.loading}>
+    return (
+      <View style={styles.loading}>
         <StatusBar style="dark" />
       </View>
     );

@@ -1,21 +1,21 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { BlurFallback } from '@/components/ui/BlurFallback';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter, usePathname, type Href } from 'expo-router';
-import { colors, typography } from '@/theme';
+import { colors, typography, shadows } from '@/theme';
 
 type TabConfig = {
   key: string;
   route: string;
   label: string;
-  icon: string; // Emoji ou nom d'icône
+  icon: keyof typeof Ionicons.glyphMap;
 };
 
 const TABS: TabConfig[] = [
-  { key: 'index', route: '/(tabs)', label: 'Accueil', icon: '🏠' },
-  { key: 'cellar', route: '/(tabs)/cellar', label: 'Mes vins', icon: '🍷' },
-  { key: 'pairing', route: '/(tabs)/pairing', label: 'Accords', icon: '🍽️' },
-  { key: 'community', route: '/(tabs)/community', label: 'Communauté', icon: '👥' },
+  { key: 'index', route: '/(tabs)', label: 'Accueil', icon: 'home-outline' },
+  { key: 'cellar', route: '/(tabs)/cellar', label: 'Mes vins', icon: 'wine-outline' },
+  { key: 'pairing', route: '/(tabs)/pairing', label: 'Accords', icon: 'restaurant-outline' },
+  { key: 'community', route: '/(tabs)/community', label: 'Communauté', icon: 'people-outline' },
 ];
 
 export const TabBar: React.FC = () => {
@@ -27,32 +27,30 @@ export const TabBar: React.FC = () => {
     return pathname.includes(tab.key);
   };
 
-  const TabContent = (
-    <View style={styles.tabBar}>
-      {TABS.map((tab) => {
-        const active = isActive(tab);
-        return (
-          <Pressable
-            key={tab.key}
-            onPress={() => router.push(tab.route as Href)}
-            style={styles.tab}
-          >
-            <Text style={[styles.icon, active && styles.iconActive]}>
-              {tab.icon}
-            </Text>
-            <Text style={[styles.label, active && styles.labelActive]}>
-              {tab.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-
   return (
-    <BlurFallback intensity={80} tint="dark" style={styles.container}>
-      {TabContent}
-    </BlurFallback>
+    <View style={styles.container}>
+      <View style={styles.tabBar}>
+        {TABS.map((tab) => {
+          const active = isActive(tab);
+          return (
+            <Pressable
+              key={tab.key}
+              onPress={() => router.push(tab.route as Href)}
+              style={styles.tab}
+            >
+              <Ionicons
+                name={tab.icon}
+                size={22}
+                color={active ? colors.accent.primary : colors.text.tertiary}
+              />
+              <Text style={[styles.label, active && styles.labelActive]}>
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 };
 
@@ -62,8 +60,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    backgroundColor: colors.background.primary,
+    ...shadows.tabBar,
   },
   tabBar: {
     flexDirection: 'row',
@@ -75,19 +73,14 @@ const styles = StyleSheet.create({
   tab: {
     alignItems: 'center',
     flex: 1,
-  },
-  icon: {
-    fontSize: 22,
-    opacity: 0.6,
-  },
-  iconActive: {
-    opacity: 1,
+    gap: 4,
   },
   label: {
     ...typography.label,
     fontSize: 10,
     color: colors.text.tertiary,
     marginTop: 2,
+    textTransform: 'none',
   },
   labelActive: {
     color: colors.accent.primary,

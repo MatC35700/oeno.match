@@ -1,0 +1,45 @@
+export const REGIONS_BY_COUNTRY: Record<string, string[]> = {
+  fr: ['bordeaux', 'burgundy', 'champagne', 'rhone', 'loire', 'alsace', 'languedoc', 'provence'],
+  it: ['tuscany', 'piemont'],
+  es: ['rioja', 'ribera'],
+  pt: ['douro'],
+  us: ['napa', 'sonoma'],
+  au: ['barossa'],
+  ar: ['mendoza'],
+  de: ['mosel'],
+  other: ['others'],
+};
+
+export const COUNTRY_LABELS: Record<string, string> = {
+  fr: 'France',
+  it: 'Italie',
+  es: 'Espagne',
+  pt: 'Portugal',
+  us: 'États-Unis',
+  au: 'Australie',
+  ar: 'Argentine',
+  de: 'Allemagne',
+  other: 'Autres',
+};
+
+export const REGION_LABELS: Record<string, string> = {
+  bordeaux: 'Bordeaux',
+  burgundy: 'Bourgogne',
+  champagne: 'Champagne',
+  rhone: 'Vallée du Rhône',
+  loire: 'Loire',
+  alsace: 'Alsace',
+  languedoc: 'Languedoc-Roussillon',
+  provence: 'Provence',
+  tuscany: 'Toscane',
+  piemont: 'Piémont',
+  rioja: 'Rioja',
+  ribera: 'Ribera del Duero',
+  douro: 'Douro',
+  napa: 'Napa Valley',
+  sonoma: 'Sonoma',
+  barossa: 'Barossa Valley',
+  mendoza: 'Mendoza',
+  mosel: 'Mosel',
+  others: 'Autres',
+};

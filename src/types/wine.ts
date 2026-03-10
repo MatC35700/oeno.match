@@ -7,6 +7,7 @@ export interface Wine {
   user_id: string;
   domain_name: string;
   cuvee_name?: string;
+  appellation?: string;
   color: WineColor;
   country: string;
   region: string;
@@ -25,9 +26,12 @@ export interface Wine {
   ideal_temp?: number; // Température idéale °C
   decanting_time?: number; // Temps de carafage en minutes
   is_wishlist: boolean; // Mes envies
+  is_favorite?: boolean; // Favori (étoile)
   notes_public: boolean; // Visible par la communauté
   estimated_value?: number; // Valeur estimée en €
   purchase_price?: number;
   created_at: string;
   updated_at: string;
+  consumed_at?: string | null; // When moved to history
+  deleted_at?: string | null; // Soft delete
 }

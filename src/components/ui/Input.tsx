@@ -6,12 +6,14 @@ interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
   error?: string;
   leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
 export const Input: React.FC<InputProps> = ({
   label,
   error,
   leftIcon,
+  rightIcon,
   onFocus,
   onBlur,
   ...props
@@ -28,21 +30,31 @@ export const Input: React.FC<InputProps> = ({
     onBlur?.(e);
   };
 
-  const borderColor = error ? colors.error : isFocused ? colors.borderFocus : colors.border;
-  const borderWidth = isFocused ? 1.5 : 1;
+  const borderColor = error ? colors.error : isFocused ? colors.accent.primary : undefined;
+  const borderWidth = error || isFocused ? 1 : 0;
 
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputWrapper, { borderColor, borderWidth }]}>
+      <View
+        style={[
+          styles.inputWrapper,
+          borderWidth > 0 && borderColor && { borderColor, borderWidth },
+        ]}
+      >
         {leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>}
         <TextInput
-          style={[styles.input, leftIcon ? styles.inputWithIcon : undefined]}
+          style={[
+            styles.input,
+            leftIcon ? styles.inputWithIcon : undefined,
+            rightIcon ? styles.inputWithRightIcon : undefined,
+          ]}
           placeholderTextColor={colors.text.tertiary}
           onFocus={handleFocus}
           onBlur={handleBlur}
           {...props}
         />
+        {rightIcon && <View style={styles.rightIconContainer}>{rightIcon}</View>}
       </View>
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
@@ -54,16 +66,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   label: {
-    fontFamily: 'Outfit_500Medium',
-    fontSize: 13,
-    color: colors.text.secondary,
+    ...typography.label,
+    color: colors.text.tertiary,
     marginBottom: 6,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background.secondary,
-    borderRadius: radius.md,
+    backgroundColor: colors.background.tertiary,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
     minHeight: 48,
   },
@@ -72,13 +83,18 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontFamily: 'Outfit_400Regular',
-    fontSize: 16,
+    ...typography.body,
     color: colors.text.primary,
     paddingVertical: spacing.md,
   },
   inputWithIcon: {
     paddingLeft: 0,
+  },
+  inputWithRightIcon: {
+    paddingRight: 0,
+  },
+  rightIconContainer: {
+    marginLeft: spacing.sm,
   },
   error: {
     ...typography.bodySmall,

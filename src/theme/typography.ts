@@ -1,42 +1,37 @@
 export const typography = {
-  // Titres
   h1: {
     fontFamily: 'Outfit_700Bold',
-    fontSize: 32,
-    lineHeight: 40,
+    fontSize: 28,
+    lineHeight: 36,
     letterSpacing: -0.5,
   },
   h2: {
     fontFamily: 'Outfit_600SemiBold',
-    fontSize: 24,
-    lineHeight: 32,
+    fontSize: 22,
+    lineHeight: 30,
     letterSpacing: -0.3,
   },
   h3: {
     fontFamily: 'Outfit_600SemiBold',
-    fontSize: 20,
-    lineHeight: 28,
+    fontSize: 18,
+    lineHeight: 26,
   },
-  // Corps
   body: {
     fontFamily: 'Outfit_400Regular',
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 22,
   },
   bodySmall: {
     fontFamily: 'Outfit_400Regular',
     fontSize: 14,
     lineHeight: 20,
   },
-  // Labels
   label: {
     fontFamily: 'Outfit_500Medium',
     fontSize: 12,
     lineHeight: 16,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase' as const,
+    letterSpacing: 0.4,
   },
-  // Chiffres (compteur vintage)
   display: {
     fontFamily: 'Outfit_700Bold',
     fontSize: 48,

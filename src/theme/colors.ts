@@ -1,49 +1,34 @@
 export const colors = {
-  // Fonds
   background: {
-    primary: '#FFF4E8', // Crème ivoire — fond de page
-    secondary: '#FFFFFF', // Blanc — cards, inputs, tab bar
-    tertiary: '#F5E6D0', // Crème clair — chips
+    primary: '#FFFFFF',
+    secondary: '#FFFFFF',
+    tertiary: '#F5F0EB',
   },
-  // Accent principal — bordeaux
   accent: {
-    primary: '#811C35', // Bordeaux principal (boutons, icônes actives)
-    secondary: '#8C7B6B', // Brun clair (inactif)
-    muted: 'rgba(129, 28, 53, 0.08)', // Fond subtil pressed
+    primary: '#E45545',
+    secondary: '#C98F70',
+    muted: 'rgba(228, 85, 69, 0.08)',
   },
-  // Couleurs de vin — pour les tags et indicateurs
-  wine: {
-    red: '#811C35',
-    white: '#F5E6C8',
-    rose: '#D4758B',
-    yellow: '#C8A951',
-    orange: '#C47A3A',
+  green: {
+    light: '#84B09F',
+    mid: '#6D972E',
+    dark: '#014022',
   },
-  // Maturité
   maturity: {
-    drink: '#4CAF50',
-    peak: '#8BC34A',
-    wait: '#FF9800',
-    sleep: '#9E9E9E',
+    drink: '#6D972E',
+    peak: '#84B09F',
+    wait: '#C98F70',
+    sleep: '#BBBBBB',
   },
-  // Texte
   text: {
-    primary: '#2E1809', // Titres
-    secondary: '#5C4A3A', // Corps de texte
-    tertiary: '#8C7B6B', // Labels, placeholders
-    inverse: '#FFF4E8', // Texte sur fond bordeaux
+    primary: '#1A1A1A',
+    secondary: '#5C4A3A',
+    tertiary: '#9B8878',
+    inverse: '#FFFFFF',
+    onAccent: '#FFFFFF',
   },
-  // Utilitaires
-  border: 'rgba(46, 24, 9, 0.12)',
-  borderFocus: '#811C35',
-  success: '#4CAF50',
-  error: '#EF4444',
-  warning: '#F59E0B',
-  // Icônes
-  icon: {
-    default: '#5C4A3A', // Brun moyen
-    active: '#811C35', // Bordeaux
-    inactive: '#8C7B6B', // Brun clair
-    empty: '#B1AD86', // Olive doux (état vide)
-  },
+  border: 'transparent',
+  success: '#6D972E',
+  error: '#E45545',
+  warning: '#C98F70',
 } as const;
