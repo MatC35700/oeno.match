@@ -5,7 +5,8 @@
     "save": "Enregistrer",
     "cancel": "Annuler",
     "search": "Rechercher",
-    "filter": "Filtrer"
+    "filter": "Filtrer",
+    "error": "Erreur"
   },
   "welcome": {
     "tagline": "Votre cave, sublimée.",
@@ -137,6 +138,12 @@
     "modifyLabel": "Modifier",
     "shareLabel": "Partager",
     "deleteLabel": "Supprimer",
+    "addPhotosLabel": "Ajouter des photos",
+    "photoPermissionDenied": "Autorisation requise pour accéder aux photos.",
+    "photoUploadError": "Impossible d'ajouter la photo.",
+    "photoFromLibrary": "Photothèque",
+    "photoTakePicture": "Prendre une photo",
+    "cameraPermissionDenied": "Autorisation requise pour utiliser l'appareil photo.",
     "shareCommunity": "Partager avec la communauté",
     "addToFavorite": "Ajouter aux favoris",
     "removeFromFavorite": "Retirer des favoris"

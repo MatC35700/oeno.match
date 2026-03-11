@@ -1,9 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
@@ -11,7 +21,7 @@ import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { RatingBar } from '@/components/ui/RatingBar';
 import { colors, spacing, typography, radius, shadows } from '@/theme';
 import { REGION_LABELS, COUNTRY_LABELS } from '@/config/wineRegions';
-import { getWineById } from '@/lib/supabase/wines';
+import { getWineById, addWinePhoto } from '@/lib/supabase/wines';
 import { useCellarStore } from '@/stores/cellarStore';
 import { WINE_COLOR_HEX } from '@/config/wineColors';
 import type { Wine, WineColor } from '@/types/wine';
@@ -29,6 +39,10 @@ export default function WineDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
   const [cepagesModalVisible, setCepagesModalVisible] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [addingPhoto, setAddingPhoto] = useState(false);
+
+  const { width: screenWidth } = useWindowDimensions();
 
   const updateWine = useCellarStore((s) => s.updateWine);
   const removeWine = useCellarStore((s) => s.removeWine);
@@ -120,6 +134,91 @@ export default function WineDetailScreen() {
     // Point d’entrée pour le partage (à implémenter plus tard)
   };
 
+  const heroPhotos: string[] =
+    wine?.image_urls?.length
+      ? wine.image_urls.filter((u): u is string => typeof u === 'string' && u.length > 0)
+      : wine?.label_image_url
+        ? [wine.label_image_url]
+        : [];
+
+  useEffect(() => {
+    setCarouselIndex(0);
+  }, [wine?.id, heroPhotos.length]);
+
+  const handleAddPhoto = () => {
+    if (!wine) return;
+    setMenuVisible(false);
+    Alert.alert(
+      t('cellar.addPhotosLabel') || 'Ajouter des photos',
+      null,
+      [
+        { text: t('common.cancel') || 'Annuler', style: 'cancel' },
+        {
+          text: t('cellar.photoFromLibrary') || 'Photothèque',
+          onPress: () => pickAndUploadPhoto('library'),
+        },
+        {
+          text: t('cellar.photoTakePicture') || 'Prendre une photo',
+          onPress: () => pickAndUploadPhoto('camera'),
+        },
+      ]
+    );
+  };
+
+  const pickAndUploadPhoto = async (source: 'library' | 'camera') => {
+    if (!wine) return;
+    if (source === 'library') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          t('common.error') || 'Erreur',
+          t('cellar.photoPermissionDenied') || 'Autorisation requise pour accéder aux photos.'
+        );
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1.5],
+        quality: 0.8,
+      });
+      if (result.canceled) return;
+      await uploadPhoto(result.assets[0].uri);
+      return;
+    }
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        t('common.error') || 'Erreur',
+        t('cellar.cameraPermissionDenied') || 'Autorisation requise pour utiliser l’appareil photo.'
+      );
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1.5],
+      quality: 0.8,
+    });
+    if (result.canceled) return;
+    await uploadPhoto(result.assets[0].uri);
+  };
+
+  const uploadPhoto = async (uri: string) => {
+    if (!wine) return;
+    setAddingPhoto(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const { data, error } = await addWinePhoto(wine.id, wine.user_id, uri);
+    setAddingPhoto(false);
+    if (error) {
+      Alert.alert(
+        t('common.error') || 'Erreur',
+        (t('cellar.photoUploadError') || 'Impossible d’ajouter la photo.') + (error.message ? `\n${error.message}` : '')
+      );
+      return;
+    }
+    if (data) setWine(data);
+  };
+
   if (loading || !wine) {
     return (
       <ScreenWrapper fullWidth>
@@ -140,45 +239,60 @@ export default function WineDetailScreen() {
       <ScreenWrapper edges={['top', 'left', 'right']} fullWidth>
         {/* HERO */}
         <View style={styles.hero}>
-          {wine.label_image_url ? (
+          {heroPhotos.length > 0 ? (
             <>
-              {/* Photo plein écran, collée aux bords du hero */}
-              <Image
-                source={{ uri: wine.label_image_url }}
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={(e) => {
+                  const index = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+                  setCarouselIndex(index);
+                }}
                 style={StyleSheet.absoluteFill}
-                contentFit="cover"
-              />
+              >
+                {heroPhotos.map((uri, index) => (
+                  <View key={`${uri}-${index}`} style={[styles.heroSlide, { width: screenWidth }]}>
+                    <Image
+                      source={{ uri }}
+                      style={[StyleSheet.absoluteFill, { width: screenWidth, height: HEADER_HEIGHT }]}
+                      contentFit="cover"
+                      recyclingKey={uri}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
               {/* Légère teinte chaude par-dessus pour garder l’ambiance */}
               <LinearGradient
                 colors={['rgba(0,0,0,0.15)', 'rgba(0,0,0,0.35)']}
                 start={{ x: 0.2, y: 0 }}
                 end={{ x: 0.8, y: 1 }}
                 style={StyleSheet.absoluteFill}
+                pointerEvents="none"
               />
             </>
           ) : (
             <>
               <LinearGradient
-                colors={['#2C1A0E', '#6B3B2A', '#4A2C1A', '#1A0F08']}
+                colors={['#2C1A0E', '#5C3325', '#4A2C1A', '#1A0F08']}
                 start={{ x: 0.1, y: 0 }}
                 end={{ x: 0.9, y: 1 }}
                 style={StyleSheet.absoluteFill}
+                pointerEvents="none"
               />
-              {/* Silhouette + étiquette */}
-              <View style={styles.bottleSilhouette}>
-                <View style={styles.bottleShape} />
-              </View>
-              <View style={styles.labelSticker}>
-                <Text style={styles.labelChateau} numberOfLines={2}>
-                  {wine.domain_name}
-                </Text>
-                <View style={styles.labelLine} />
-                <Text style={styles.labelYear}>{wine.vintage}</Text>
-                <View style={styles.labelLine} />
-                <Text style={styles.labelRegion} numberOfLines={1}>
-                  {REGION_LABELS[wine.region] ?? wine.region} ·{' '}
-                  {COUNTRY_LABELS[wine.country] ?? wine.country}
-                </Text>
+              {/* Étiquette générique : domaine · millésime · appellation */}
+              <View style={styles.genericLabel}>
+                <View style={styles.genericLabelInner}>
+                  <Text style={styles.genericLabelDomain} numberOfLines={2}>
+                    {wine.domain_name}
+                  </Text>
+                  <View style={styles.genericLabelDivider} />
+                  <Text style={styles.genericLabelVintage}>{wine.vintage}</Text>
+                  <View style={styles.genericLabelDivider} />
+                  <Text style={styles.genericLabelAppellation} numberOfLines={1}>
+                    {wine.appellation || `${REGION_LABELS[wine.region] ?? wine.region} · ${COUNTRY_LABELS[wine.country] ?? wine.country}`}
+                  </Text>
+                </View>
               </View>
             </>
           )}
@@ -234,9 +348,21 @@ export default function WineDetailScreen() {
 
           {/* Dots */}
           <View style={styles.heroDots}>
-            <View style={[styles.dot, styles.dotActive]} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
+            {heroPhotos.length >= 1
+              ? heroPhotos.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.dot,
+                      index === carouselIndex && styles.dotActive,
+                    ]}
+                  />
+                ))
+              : [
+                  <View key={0} style={[styles.dot, styles.dotActive]} />,
+                  <View key={1} style={styles.dot} />,
+                  <View key={2} style={styles.dot} />,
+                ]}
           </View>
 
           {/* Gradient bas du hero */}
@@ -253,6 +379,19 @@ export default function WineDetailScreen() {
             onPress={() => setMenuVisible(false)}
           >
             <View style={styles.menuDropdown}>
+              <Pressable
+                style={styles.menuItem}
+                onPress={handleAddPhoto}
+              >
+                <Ionicons
+                  name="camera-outline"
+                  size={20}
+                  color={colors.text.primary}
+                />
+                <Text style={styles.menuItemText}>
+                  {t('cellar.addPhotosLabel') || 'Ajouter des photos'}
+                </Text>
+              </Pressable>
               <Pressable
                 style={styles.menuItem}
                 onPress={handleModify}
@@ -593,65 +732,60 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  bottleSilhouette: {
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-    transform: [{ translateX: -40 }, { translateY: -100 }],
-    opacity: 0.18,
+  heroSlide: {
+    height: HEADER_HEIGHT,
   },
-  bottleShape: {
-    width: 80,
-    height: 200,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.6)',
+  genericLabel: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
   },
-  labelSticker: {
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-    transform: [{ translateX: -36 }, { translateY: -80 }],
-    width: 72,
-    height: 90,
-    borderRadius: 4,
-    backgroundColor: '#F5E8D0',
-    paddingVertical: 8,
-    paddingHorizontal: 6,
+  genericLabelInner: {
+    width: '100%',
+    maxWidth: 240,
+    backgroundColor: '#F5EDE0',
+    borderRadius: 8,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 90, 58, 0.35)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 8,
   },
-  labelChateau: {
-    fontSize: 5,
+  genericLabelDomain: {
+    fontSize: 18,
     fontWeight: '700',
-    color: '#3A1A0A',
+    color: '#2C1810',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 1.2,
     textAlign: 'center',
-    lineHeight: 1.3 * 5,
+    lineHeight: 22,
   },
-  labelLine: {
-    width: 40,
+  genericLabelDivider: {
+    width: 48,
     height: 1,
     backgroundColor: '#8B5A3A',
     opacity: 0.5,
+    marginVertical: 10,
   },
-  labelYear: {
-    fontSize: 14,
-    fontWeight: '700',
+  genericLabelVintage: {
+    fontSize: 28,
+    fontWeight: '800',
     color: '#3A1A0A',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
-  labelRegion: {
-    fontSize: 4,
+  genericLabelAppellation: {
+    fontSize: 12,
+    fontWeight: '500',
     color: '#6B4A2A',
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     textAlign: 'center',
   },
   heroGradient: {

@@ -5,7 +5,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "search": "Search",
-    "filter": "Filter"
+    "filter": "Filter",
+    "error": "Error"
   },
   "welcome": {
     "tagline": "Your cellar, elevated.",
@@ -128,6 +129,12 @@
     "modifyLabel": "Edit",
     "shareLabel": "Share",
     "deleteLabel": "Delete",
+    "addPhotosLabel": "Add photos",
+    "photoPermissionDenied": "Permission required to access photos.",
+    "photoUploadError": "Could not add photo.",
+    "photoFromLibrary": "Photo library",
+    "photoTakePicture": "Take a photo",
+    "cameraPermissionDenied": "Permission required to use the camera.",
     "shareCommunity": "Share with community",
     "addToFavorite": "Add to favorites",
     "removeFromFavorite": "Remove from favorites"

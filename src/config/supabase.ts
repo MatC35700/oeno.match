@@ -5,6 +5,8 @@ import type { Database } from '@/types/supabase';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
+export { supabaseUrl, supabaseAnonKey };
+
 /**
  * Storage adapter sécurisé pour Supabase Auth.
  * Wrapper autour d'AsyncStorage avec fallback in-memory si AsyncStorage échoue.

@@ -21,6 +21,8 @@ export interface Wine {
   quantity: number;
   label_image_url?: string;
   back_label_image_url?: string;
+  /** URLs des photos du vin (étiquette, contre-étiquette, etc.) pour le carousel */
+  image_urls?: string[];
   maturity_phase: MaturityPhase;
   peak_date?: string; // Date d'apogée
   ideal_temp?: number; // Température idéale °C

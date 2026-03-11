@@ -1,4 +1,5 @@
-import { supabase } from '@/config/supabase';
+import { supabase, supabaseUrl, supabaseAnonKey } from '@/config/supabase';
+import { File } from 'expo-file-system';
 import type { Wine } from '@/types/wine';
 import type { WineColor, MaturityPhase } from '@/types/wine';
 
@@ -30,6 +31,44 @@ export interface GetWinesOptions extends WineFilters {
 }
 
 const DEFAULT_PAGE_SIZE = 20;
+
+const BUCKET = 'wine-labels';
+
+/** Upload via REST avec body binaire (ArrayBuffer). React Native accepte ArrayBuffer comme body. */
+async function uploadFileToStorage(
+  path: string,
+  imageUri: string,
+  contentType: string
+): Promise<{ publicUrl: string } | { error: Error }> {
+  try {
+    const file = new File(imageUri);
+    const arrayBuffer = await file.arrayBuffer();
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token ?? supabaseAnonKey;
+    const pathEncoded = path.split('/').map(encodeURIComponent).join('/');
+    const url = `${supabaseUrl}/storage/v1/object/${BUCKET}/${pathEncoded}`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        'Content-Type': contentType,
+        'x-upsert': 'true',
+      },
+      body: arrayBuffer,
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      return { error: new Error(errBody || `Upload failed: ${res.status}`) };
+    }
+    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    return { publicUrl: urlData.publicUrl };
+  } catch (e) {
+    return { error: e instanceof Error ? e : new Error(String(e)) };
+  }
+}
 
 function buildWinesQuery(userId: string, filters?: GetWinesOptions) {
   let query = supabase
@@ -155,24 +194,50 @@ async function uploadLabelImage(
   wineId: string,
   imageUri: string
 ): Promise<{ data: string | null; error: Error | null }> {
-  try {
-    const response = await fetch(imageUri);
-    const blob = await response.blob();
-    const ext = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
-    const contentType = ext === 'png' ? 'image/png' : 'image/jpeg';
-    const path = `${userId}/${wineId}/label.${ext}`;
+  const ext = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+  const contentType = ext === 'png' ? 'image/png' : 'image/jpeg';
+  const path = `${userId}/${wineId}/label.${ext}`;
+  const result = await uploadFileToStorage(path, imageUri, contentType);
+  if ('error' in result) return { data: null, error: result.error };
+  return { data: result.publicUrl, error: null };
+}
 
-    const { data, error } = await supabase.storage
-      .from('wine-labels')
-      .upload(path, blob, { contentType, upsert: true });
+async function uploadWinePhoto(
+  userId: string,
+  wineId: string,
+  imageUri: string,
+  index: number
+): Promise<{ data: string | null; error: Error | null }> {
+  const ext = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+  const contentType = ext === 'png' ? 'image/png' : 'image/jpeg';
+  const path = `${userId}/${wineId}/photo_${index}.${ext}`;
+  const result = await uploadFileToStorage(path, imageUri, contentType);
+  if ('error' in result) return { data: null, error: result.error };
+  return { data: result.publicUrl, error: null };
+}
 
-    if (error) return { data: null, error };
+/** Ajoute une photo au vin (carousel). Upload puis met à jour image_urls. */
+export async function addWinePhoto(
+  wineId: string,
+  userId: string,
+  imageUri: string
+): Promise<{ data: Wine | null; error: Error | null }> {
+  const { data: wine, error: fetchError } = await getWineById(wineId);
+  if (fetchError || !wine) return { data: null, error: fetchError ?? new Error('Wine not found') };
 
-    const { data: urlData } = supabase.storage.from('wine-labels').getPublicUrl(path);
-    return { data: urlData.publicUrl, error: null };
-  } catch (e) {
-    return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
-  }
+  const currentUrls: string[] = Array.isArray(wine.image_urls)
+    ? wine.image_urls
+    : wine.label_image_url
+      ? [wine.label_image_url]
+      : [];
+  const index = currentUrls.length;
+
+  const { data: url, error: uploadError } = await uploadWinePhoto(userId, wineId, imageUri, index);
+  if (uploadError || !url) return { data: null, error: uploadError ?? new Error('Upload failed') };
+
+  const newUrls = [...currentUrls, url];
+  const { data: updated, error: updateError } = await updateWine(wineId, { image_urls: newUrls });
+  return { data: updated, error: updateError ?? null };
 }
 
 export async function updateWine(wineId: string, updates: Partial<Wine>) {
