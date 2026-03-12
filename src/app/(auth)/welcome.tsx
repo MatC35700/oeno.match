@@ -13,7 +13,6 @@ import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Button } from '@/components/ui/Button';
 import { colors, typography, spacing } from '@/theme';
-import { hasSeenLanguageScreen } from '@/lib/auth/firstLaunch';
 import { useTranslation } from 'react-i18next';
 
 export default function WelcomeScreen() {
@@ -35,12 +34,7 @@ export default function WelcomeScreen() {
 
   const handleStart = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const seen = await hasSeenLanguageScreen();
-    if (seen) {
-      router.push('/(auth)/login' as Href);
-    } else {
-      router.push('/(auth)/language' as Href);
-    }
+    router.push('/(auth)/login' as Href);
   };
 
   return (

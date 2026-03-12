@@ -32,6 +32,7 @@ import { REGIONS_BY_COUNTRY, COUNTRY_LABELS, REGION_LABELS } from '@/config/wine
 import { getWineById } from '@/lib/supabase/wines';
 import { WINE_COLORS } from '@/config/wineColors';
 import type { WineColor, MaturityPhase, Wine } from '@/types/wine';
+import type { ScanResult } from '@/lib/gemini/scan';
 
 const currentYear = new Date().getFullYear();
 const VINTAGE_YEARS = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => currentYear - i);
@@ -59,9 +60,19 @@ type WineFormData = z.infer<typeof wineSchema>;
 export default function AddWineManualScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const localParams = useLocalSearchParams<{ id?: string | string[] }>();
-  const globalParams = useGlobalSearchParams<{ id?: string | string[] }>();
+  const localParams = useLocalSearchParams<{
+    id?: string | string[];
+    scan?: string | string[];
+    labelUri?: string | string[];
+  }>();
+  const globalParams = useGlobalSearchParams<{
+    id?: string | string[];
+    scan?: string | string[];
+    labelUri?: string | string[];
+  }>();
   const id = localParams.id ?? globalParams.id;
+  const scanParam = localParams.scan ?? globalParams.scan;
+  const labelUriParam = localParams.labelUri ?? globalParams.labelUri;
   const userId = useUserId();
   const addWine = useCellarStore((s) => s.addWine);
   const updateWineStore = useCellarStore((s) => s.updateWine);
@@ -110,6 +121,49 @@ export default function AddWineManualScreen() {
       setValue('region', regions[0]);
     }
   }, [country, regions, currentRegion, setValue]);
+
+  React.useEffect(() => {
+    if (!scanParam || isEditing) return;
+    const raw = Array.isArray(scanParam) ? scanParam[0] : scanParam;
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as ScanResult;
+      const normalizedCountry = parsed.country?.toLowerCase().trim();
+      const countryEntry = normalizedCountry
+        ? Object.entries(COUNTRY_LABELS).find(
+            ([, label]) => label.toLowerCase() === normalizedCountry
+          )
+        : undefined;
+      const countryCode = countryEntry?.[0] ?? 'fr';
+
+      reset({
+        domain_name: parsed.domain_name ?? '',
+        cuvee_name: parsed.cuvee_name ?? '',
+        appellation: '',
+        color: (parsed.color as WineColor) ?? 'red',
+        country: countryCode,
+        region: parsed.region ?? '',
+        vintage: parsed.vintage ?? currentYear,
+        quantity: 1,
+        user_rating: undefined,
+        personal_notes: '',
+        notes_public: false,
+        producer_name: parsed.producer_name ?? '',
+        storage_location: '',
+        storage_row: '',
+      });
+    } catch {
+      // ignore malformed scan param
+    }
+  }, [scanParam, isEditing, reset]);
+
+  React.useEffect(() => {
+    if (isEditing) return;
+    const raw = Array.isArray(labelUriParam) ? labelUriParam[0] : labelUriParam;
+    if (raw && typeof raw === 'string') {
+      setImageUri(raw);
+    }
+  }, [labelUriParam, isEditing]);
 
   React.useEffect(() => {
     if (!isEditing || !wineId) return;

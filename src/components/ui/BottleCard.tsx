@@ -113,7 +113,7 @@ export const BottleCard: React.FC<BottleCardProps> = ({ wine, onPress, onFavorit
                   style={styles.favoriteBtn}
                 >
                   <Ionicons
-                    name={wine.is_favorite ? 'star' : 'star-outline'}
+                    name={wine.is_favorite ? 'heart' : 'heart-outline'}
                     size={22}
                     color={wine.is_favorite ? colors.accent.primary : colors.text.tertiary}
                   />
@@ -121,7 +121,7 @@ export const BottleCard: React.FC<BottleCardProps> = ({ wine, onPress, onFavorit
               ) : (
                 <View style={styles.favoriteBtn}>
                   <Ionicons
-                    name={wine.is_favorite ? 'star' : 'star-outline'}
+                    name={wine.is_favorite ? 'heart' : 'heart-outline'}
                     size={22}
                     color={wine.is_favorite ? colors.accent.primary : colors.text.tertiary}
                   />

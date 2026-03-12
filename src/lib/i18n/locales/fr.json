@@ -42,7 +42,15 @@
     "confirmPassword": "Confirmer le mot de passe",
     "minChars": "10 caractères min",
     "oneNumber": "1 chiffre",
-    "oneSpecial": "1 caractère spécial"
+    "oneSpecial": "1 caractère spécial",
+    "loginTitle": "Inscrivez-vous ou connectez-vous",
+    "continueWithApple": "Continuer avec Apple",
+    "continueWithGoogle": "Continuer avec Google",
+    "continueWithFacebook": "Continuer avec Facebook",
+    "continueWithEmail": "Continuer avec une adresse e-mail",
+    "enterEmailTitle": "Indiquez votre adresse e-mail",
+    "orContinueWithEmail": "Ou continuer avec une adresse e-mail",
+    "logout": "Se déconnecter"
   },
   "onboarding": {
     "welcome": "Bienvenue dans votre cave",

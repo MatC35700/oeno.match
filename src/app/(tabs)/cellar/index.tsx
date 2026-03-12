@@ -96,7 +96,10 @@ export default function CellarScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               router.push('/(modals)/add-wine-manual' as Href);
             }}
-            style={({ pressed }) => [styles.addBtn, pressed && styles.addBtnPressed]}
+            style={({ pressed }) => [
+              styles.addBtn,
+              pressed && styles.addBtnPressed,
+            ]}
           >
             <Ionicons name="add" size={24} color={colors.text.onAccent} />
           </Pressable>
@@ -112,7 +115,11 @@ export default function CellarScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setFilters({ tab: tab.key });
                 }}
-                style={[styles.tab, isActive && styles.tabActive]}
+                style={({ pressed }) => [
+                  styles.tab,
+                  isActive && styles.tabActive,
+                  pressed && styles.tabPressed,
+                ]}
               >
                 <Text
                   style={[
@@ -140,7 +147,10 @@ export default function CellarScreen() {
           </View>
           <Pressable
             onPress={() => setFilterSheetVisible(true)}
-            style={({ pressed }) => [styles.filterBtn, pressed && styles.filterBtnPressed]}
+            style={({ pressed }) => [
+              styles.filterBtn,
+              pressed && styles.filterBtnPressed,
+            ]}
           >
             <Ionicons name="filter" size={22} color={colors.accent.primary} />
           </Pressable>
@@ -188,10 +198,13 @@ export default function CellarScreen() {
           />
         )}
 
-        {!isEmpty && (
+        {(
           <Pressable
             onPress={() => setFabSheetVisible(true)}
-            style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+            style={({ pressed }) => [
+              styles.fab,
+              pressed && styles.fabPressed,
+            ]}
           >
             <Ionicons name="add" size={28} color={colors.text.onAccent} />
           </Pressable>
@@ -277,7 +290,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addBtnPressed: {
-    opacity: 0.85,
+    opacity: 0.9,
+    transform: [{ scale: 0.96 }],
   },
   tabBar: {
     flexDirection: 'row',
@@ -292,6 +306,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 8,
+  },
+  tabPressed: {
+    transform: [{ scale: 0.97 }],
   },
   tabActive: {
     backgroundColor: colors.accent.primary,
@@ -327,7 +344,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   filterBtnPressed: {
-    opacity: 0.7,
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }],
   },
   list: {
     paddingHorizontal: spacing.screen,
@@ -376,6 +394,7 @@ const styles = StyleSheet.create({
   },
   fabPressed: {
     opacity: 0.9,
+    transform: [{ scale: 0.96 }],
   },
   fabOverlay: {
     flex: 1,

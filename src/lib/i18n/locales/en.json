@@ -42,7 +42,15 @@
     "confirmPassword": "Confirm password",
     "minChars": "Min. 10 characters",
     "oneNumber": "1 number",
-    "oneSpecial": "1 special character"
+    "oneSpecial": "1 special character",
+    "loginTitle": "Sign up or log in",
+    "continueWithApple": "Continue with Apple",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithFacebook": "Continue with Facebook",
+    "continueWithEmail": "Continue with an email address",
+    "enterEmailTitle": "Enter your email address",
+    "orContinueWithEmail": "Or continue with an email address",
+    "logout": "Sign out"
   },
   "onboarding": {
     "welcome": "Welcome to your cellar",

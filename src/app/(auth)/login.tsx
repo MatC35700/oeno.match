@@ -7,68 +7,32 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
 import { colors, typography, spacing } from '@/theme';
-import { signInWithEmail, signUpWithEmail, signInWithOAuth, resetPasswordForEmail } from '@/lib/supabase/auth';
+import { signInWithOAuth } from '@/lib/supabase/auth';
+import { setAppLanguage } from '@/lib/i18n';
+import type { SupportedLanguage } from '@/lib/i18n';
 
-type AuthMode = 'login' | 'register';
+const LANGUAGES: { code: SupportedLanguage; labelKey: string }[] = [
+  { code: 'fr', labelKey: 'language.french' },
+  { code: 'en', labelKey: 'language.english' },
+  { code: 'es', labelKey: 'language.spanish' },
+  { code: 'it', labelKey: 'language.italian' },
+  { code: 'de', labelKey: 'language.german' },
+];
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
-  const [mode, setMode] = useState<AuthMode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const handleToggleMode = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setMode((m) => (m === 'login' ? 'register' : 'login'));
-    setError(null);
-  };
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Email et mot de passe requis');
-      return;
-    }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setLoading(true);
-    setError(null);
-    const { error: err } = await signInWithEmail(email, password);
-    setLoading(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    router.replace('/(tabs)' as Href);
-  };
-
-  const handleRegister = async () => {
-    if (!email) {
-      setError('Email requis');
-      return;
-    }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setLoading(true);
-    setError(null);
-    const { error: err } = await signUpWithEmail(email);
-    setLoading(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    router.push(`/(auth)/verify-email?email=${encodeURIComponent(email)}` as Href);
-  };
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const currentLanguage = (i18n.language as SupportedLanguage) || 'fr';
 
   const handleOAuth = async (provider: 'google' | 'apple' | 'facebook') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -81,8 +45,6 @@ export default function LoginScreen() {
     }
   };
 
-  const canSubmit = mode === 'login' ? email && password : email;
-
   return (
     <ScreenWrapper>
       <KeyboardAvoidingView
@@ -94,133 +56,123 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.tabs}>
-            <Pressable
-              onPress={() => setMode('login')}
-              style={[styles.tab, mode === 'login' && styles.tabActive]}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  mode === 'login' && styles.tabTextActive,
-                ]}
-              >
-                {t('auth.login')}
+          <View style={styles.headerRow}>
+            <View style={styles.headerText}>
+              <Text style={styles.title}>
+                {t('auth.loginTitle') || 'Inscrivez-vous ou connectez-vous'}
               </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setMode('register')}
-              style={[styles.tab, mode === 'register' && styles.tabActive]}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  mode === 'register' && styles.tabTextActive,
-                ]}
+            </View>
+            <View style={styles.languageSelector}>
+              <Pressable
+                style={styles.languageChip}
+                onPress={() => setLanguageMenuOpen((open) => !open)}
+                hitSlop={8}
               >
-                {t('auth.register')}
-              </Text>
-            </Pressable>
+                <Text style={styles.languageChipText}>{currentLanguage.toUpperCase()}</Text>
+                <Ionicons name={languageMenuOpen ? 'chevron-up' : 'chevron-down'} size={14} color={colors.text.primary} />
+              </Pressable>
+              {languageMenuOpen && (
+                <View style={styles.languageMenu}>
+                  {LANGUAGES.map(({ code, labelKey }) => (
+                    <Pressable
+                      key={code}
+                      onPress={() => {
+                        setLanguageMenuOpen(false);
+                        setAppLanguage(code);
+                      }}
+                      style={styles.languageMenuItem}
+                    >
+                      <Text
+                        style={[
+                          styles.languageMenuText,
+                          currentLanguage === code && styles.languageMenuTextActive,
+                        ]}
+                      >
+                        {t(labelKey)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
           </View>
 
-          {mode === 'login' ? (
-            <>
-              <Input
-                label={t('auth.email')}
-                placeholder="vous@exemple.com"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-              <Input
-                label={t('auth.password')}
-                placeholder="••••••••"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoComplete="password"
-              />
-              <Pressable
-                onPress={async () => {
-                  if (!email) {
-                    setError('Entrez votre email pour réinitialiser le mot de passe');
-                    return;
-                  }
-                  setLoading(true);
-                  const { error: err } = await resetPasswordForEmail(email);
-                  setLoading(false);
-                  if (err) setError(err.message);
-                  else Alert.alert('Email envoyé', 'Vérifiez votre boîte mail pour réinitialiser votre mot de passe.');
-                }}
-                style={styles.forgotLink}
-              >
-                <Text style={styles.forgotText}>{t('auth.forgotPassword')}</Text>
-              </Pressable>
-              <Button
-                onPress={handleLogin}
-                disabled={!canSubmit || loading}
-                style={styles.submit}
-              >
-                {t('auth.login')}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Input
-                label={t('auth.email')}
-                placeholder="vous@exemple.com"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-              <Button
-                onPress={handleRegister}
-                disabled={!canSubmit || loading}
-                style={styles.submit}
-              >
-                {t('auth.createAccount')}
-              </Button>
-            </>
-          )}
-
-          {error && <Text style={styles.error}>{error}</Text>}
+          <View style={styles.socialSection}>
+            <Pressable
+              onPress={() => handleOAuth('apple')}
+              disabled={loading}
+              style={styles.socialPrimaryButton}
+            >
+              <View style={styles.socialContent}>
+                <View style={styles.socialIconSlot}>
+                  <Ionicons name="logo-apple" size={24} color="#000000" />
+                </View>
+                <Text style={styles.socialPrimaryText}>
+                  {t('auth.continueWithApple') || 'Continuer avec Apple'}
+                </Text>
+                <View style={styles.socialIconSlot} />
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={() => handleOAuth('google')}
+              disabled={loading}
+              style={styles.socialPrimaryButton}
+            >
+              <View style={styles.socialContent}>
+                <View style={styles.socialIconSlot}>
+                  <Ionicons name="logo-google" size={24} color="#4285F4" />
+                </View>
+                <Text style={styles.socialPrimaryText}>
+                  {t('auth.continueWithGoogle') || 'Continuer avec Google'}
+                </Text>
+                <View style={styles.socialIconSlot} />
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={() => handleOAuth('facebook')}
+              disabled={loading}
+              style={styles.socialPrimaryButton}
+            >
+              <View style={styles.socialContent}>
+                <View style={styles.socialIconSlot}>
+                  <Ionicons name="logo-facebook" size={24} color="#1877F2" />
+                </View>
+                <Text style={styles.socialPrimaryText}>
+                  {t('auth.continueWithFacebook') || 'Continuer avec Facebook'}
+                </Text>
+                <View style={styles.socialIconSlot} />
+              </View>
+            </Pressable>
+          </View>
 
           <View style={styles.separator}>
             <View style={styles.separatorLine} />
-            <Text style={styles.separatorText}>{t('auth.orContinueWith')}</Text>
+            <Text style={styles.separatorText}>
+              {t('auth.orContinueWithEmail') || 'Ou continuer avec une adresse e-mail'}
+            </Text>
             <View style={styles.separatorLine} />
           </View>
 
-          <View style={styles.socialRow}>
-            <Button
-              variant="ghost"
-              onPress={() => handleOAuth('google')}
+          <View style={styles.socialSection}>
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/(auth)/login-email' as Href);
+              }}
               disabled={loading}
-              style={styles.socialBtn}
+              style={styles.socialPrimaryButton}
             >
-              <Ionicons name="logo-google" size={24} color={colors.accent.primary} />
-            </Button>
-            <Button
-              variant="ghost"
-              onPress={() => handleOAuth('apple')}
-              disabled={loading}
-              style={styles.socialBtn}
-            >
-              <Ionicons name="logo-apple" size={24} color={colors.accent.primary} />
-            </Button>
-            <Button
-              variant="ghost"
-              onPress={() => handleOAuth('facebook')}
-              disabled={loading}
-              style={styles.socialBtn}
-            >
-              <Ionicons name="logo-facebook" size={24} color={colors.accent.primary} />
-            </Button>
+              <View style={styles.socialContent}>
+                <View style={styles.socialIconSlot} />
+                <Text style={styles.socialPrimaryTextEmail}>
+                  {t('auth.continueWithEmail') || 'Continuer avec une adresse e-mail'}
+                </Text>
+                <View style={styles.socialIconSlot} />
+              </View>
+            </Pressable>
           </View>
+
+          {error && <Text style={styles.error}>{error}</Text>}
         </ScrollView>
       </KeyboardAvoidingView>
     </ScreenWrapper>
@@ -234,38 +186,98 @@ const styles = StyleSheet.create({
   scroll: {
     paddingBottom: spacing.xxl,
   },
-  tabs: {
+  headerRow: {
     flexDirection: 'row',
-    marginBottom: spacing.section,
-    borderBottomWidth: 0,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
   },
-  tab: {
+  headerText: {
     flex: 1,
-    paddingVertical: spacing.md,
+  },
+  title: {
+    ...typography.h2,
+    color: colors.text.primary,
+  },
+  languageSelector: {
+    marginLeft: spacing.sm,
+    alignItems: 'flex-end',
+  },
+  languageChip: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.04)',
   },
-  tabActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: colors.accent.primary,
+  languageChipText: {
+    ...typography.bodySmall,
+    color: colors.text.primary,
+    fontWeight: '600',
   },
-  tabText: {
-    ...typography.body,
-    color: colors.text.tertiary,
+  languageMenu: {
+    marginTop: 6,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 4,
+    minWidth: 140,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  tabTextActive: {
+  languageMenuItem: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  languageMenuText: {
+    ...typography.bodySmall,
+    color: colors.text.secondary,
+  },
+  languageMenuTextActive: {
     color: colors.accent.primary,
-    fontFamily: 'Outfit_600SemiBold',
+    fontWeight: '600',
   },
-  forgotLink: {
-    alignSelf: 'flex-end',
+  socialSection: {
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
     marginBottom: spacing.lg,
   },
-  forgotText: {
-    ...typography.bodySmall,
-    color: colors.text.tertiary,
+  socialPrimaryButton: {
+    borderRadius: 999,
+    backgroundColor: '#F3F3F5',
+    borderWidth: 0,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
-  submit: {
-    marginBottom: spacing.md,
+  socialContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flex: 1,
+  },
+  socialIconSlot: {
+    width: 40,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  socialPrimaryText: {
+    ...typography.body,
+    color: colors.text.primary,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  socialPrimaryTextEmail: {
+    ...typography.body,
+    color: colors.text.primary,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   error: {
     ...typography.bodySmall,

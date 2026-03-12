@@ -6,9 +6,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   useWindowDimensions,
 } from 'react-native';
+import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +43,8 @@ export default function WineDetailScreen() {
   const [cepagesModalVisible, setCepagesModalVisible] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [addingPhoto, setAddingPhoto] = useState(false);
+  const [quantityInput, setQuantityInput] = useState('');
+  const [quantityModalVisible, setQuantityModalVisible] = useState(false);
 
   const { width: screenWidth } = useWindowDimensions();
 
@@ -68,7 +72,9 @@ export default function WineDetailScreen() {
   );
 
   const handleQuantityChange = async (delta: number) => {
-    if (!wine) return;
+    if (!wine || delta === 0) return;
+
+    // Ancienne règle : ne proposer l'historique que lorsqu'on passe de 1 à 0
     if (delta < 0 && wine.quantity === 1) {
       Alert.alert(
         t('cellar.markAsTasted'),
@@ -87,10 +93,18 @@ export default function WineDetailScreen() {
       );
       return;
     }
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await updateQuantity(wine.id, delta);
     const { data } = await getWineById(wine.id);
     if (data) setWine(data);
+  };
+
+  const handleQuantitySet = async (nextQty: number) => {
+    if (!wine) return;
+    if (Number.isNaN(nextQty) || nextQty < 0) return;
+    const delta = nextQty - wine.quantity;
+    await handleQuantityChange(delta);
   };
 
   const handleDelete = () => {
@@ -300,7 +314,7 @@ export default function WineDetailScreen() {
           {/* Top nav façon AllTrails */}
           <View style={styles.topNav}>
             <Pressable
-              style={styles.navBack}
+              style={({ pressed }) => [styles.navBack, pressed && styles.navBackPressed]}
               hitSlop={10}
               onPress={() => router.back()}
             >
@@ -309,7 +323,7 @@ export default function WineDetailScreen() {
 
             <View style={styles.navRightGroup}>
               <Pressable
-                style={styles.navIconBtn}
+                style={({ pressed }) => [styles.navIconBtn, pressed && styles.navIconBtnPressed]}
                 hitSlop={6}
                 onPress={handleShare}
               >
@@ -321,7 +335,7 @@ export default function WineDetailScreen() {
               </Pressable>
               <View style={styles.navDivider} />
               <Pressable
-                style={styles.navIconBtn}
+                style={({ pressed }) => [styles.navIconBtn, pressed && styles.navIconBtnPressed]}
                 hitSlop={6}
                 onPress={handleToggleFavorite}
               >
@@ -333,7 +347,7 @@ export default function WineDetailScreen() {
               </Pressable>
               <View style={styles.navDivider} />
               <Pressable
-                style={styles.navIconBtn}
+                style={({ pressed }) => [styles.navIconBtn, pressed && styles.navIconBtnPressed]}
                 hitSlop={6}
                 onPress={() => setMenuVisible(true)}
               >
@@ -654,15 +668,29 @@ export default function WineDetailScreen() {
                 </View>
                 <View style={styles.stepper}>
                   <Pressable
-                    style={styles.stepperBtn}
+                    style={({ pressed }) => [
+                      styles.stepperBtn,
+                      pressed && styles.stepperBtnPressed,
+                    ]}
                     hitSlop={6}
                     onPress={() => handleQuantityChange(-1)}
                   >
                     <Text style={styles.stepperBtnText}>−</Text>
                   </Pressable>
-                  <Text style={styles.stepperNum}>{wine.quantity}</Text>
                   <Pressable
-                    style={styles.stepperBtn}
+                    hitSlop={6}
+                    onPress={() => {
+                      setQuantityInput(String(wine.quantity));
+                      setQuantityModalVisible(true);
+                    }}
+                  >
+                    <Text style={styles.stepperNum}>{wine.quantity}</Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.stepperBtn,
+                      pressed && styles.stepperBtnPressed,
+                    ]}
                     hitSlop={6}
                     onPress={() => handleQuantityChange(1)}
                   >
@@ -670,6 +698,16 @@ export default function WineDetailScreen() {
                   </Pressable>
                 </View>
               </View>
+              <Pressable
+                style={styles.restockBtn}
+                onPress={() => {
+                  Linking.openURL('https://www.example.com').catch(() => undefined);
+                }}
+              >
+                <Text style={styles.restockText}>
+                  {t('cellar.restock') || 'Racheter ce vin'}
+                </Text>
+              </Pressable>
             </View>
 
             {/* Badge IA */}
@@ -685,9 +723,106 @@ export default function WineDetailScreen() {
           </ScrollView>
         </View>
 
+        {/* Modale quantité */}
+        <Modal
+          visible={quantityModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setQuantityModalVisible(false)}
+        >
+          <Pressable
+            style={styles.qtyOverlay}
+            onPress={() => setQuantityModalVisible(false)}
+          >
+            <Pressable style={styles.qtyCard} onPress={() => {}}>
+              <Text style={styles.qtyTitle}>
+                {t('cellar.editQuantity') || 'Modifier la quantité'}
+              </Text>
+              <View style={styles.qtyDisplay}>
+                <Text style={styles.qtyDisplayText}>{quantityInput || '0'}</Text>
+              </View>
+              <View style={styles.keypadRow}>
+                {['1', '2', '3'].map((d) => (
+                  <Pressable
+                    key={d}
+                    style={styles.keypadKey}
+                    onPress={() => setQuantityInput((prev) => (prev === '0' ? d : prev + d))}
+                  >
+                    <Text style={styles.keypadKeyText}>{d}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View style={styles.keypadRow}>
+                {['4', '5', '6'].map((d) => (
+                  <Pressable
+                    key={d}
+                    style={styles.keypadKey}
+                    onPress={() => setQuantityInput((prev) => (prev === '0' ? d : prev + d))}
+                  >
+                    <Text style={styles.keypadKeyText}>{d}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View style={styles.keypadRow}>
+                {['7', '8', '9'].map((d) => (
+                  <Pressable
+                    key={d}
+                    style={styles.keypadKey}
+                    onPress={() => setQuantityInput((prev) => (prev === '0' ? d : prev + d))}
+                  >
+                    <Text style={styles.keypadKeyText}>{d}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View style={styles.keypadRow}>
+                <Pressable
+                  style={styles.keypadKey}
+                  onPress={() =>
+                    setQuantityInput((prev) =>
+                      prev.length <= 1 ? '' : prev.slice(0, prev.length - 1)
+                    )
+                  }
+                >
+                  <Text style={styles.keypadKeyText}>⌫</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.keypadKey}
+                  onPress={() =>
+                    setQuantityInput((prev) => (prev === '' || prev === '0' ? '0' : prev + '0'))
+                  }
+                >
+                  <Text style={styles.keypadKeyText}>0</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.keypadKey, styles.keypadOkKey]}
+                  onPress={() => {
+                    const parsed = Number((quantityInput || '0').trim());
+                    void handleQuantitySet(parsed);
+                    setQuantityModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.keypadOkText}>{t('common.save')}</Text>
+                </Pressable>
+              </View>
+              <Pressable
+                style={styles.qtyCancel}
+                onPress={() => setQuantityModalVisible(false)}
+              >
+                <Text style={styles.qtyCancelText}>{t('common.cancel')}</Text>
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
         {/* Barre d’actions en bas */}
         <View style={styles.bottomBar}>
-          <Pressable style={styles.bottomPrimary} hitSlop={6}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.bottomPrimary,
+              pressed && styles.bottomPrimaryPressed,
+            ]}
+            hitSlop={6}
+          >
             <Ionicons
               name="sparkles-outline"
               size={18}
@@ -696,7 +831,10 @@ export default function WineDetailScreen() {
             <Text style={styles.bottomPrimaryText}>Trouver un accord</Text>
           </Pressable>
           <Pressable
-            style={styles.bottomIconBtn}
+            style={({ pressed }) => [
+              styles.bottomIconBtn,
+              pressed && styles.bottomIconBtnPressed,
+            ]}
             hitSlop={8}
             onPress={() => setMenuVisible(true)}
           >
@@ -819,6 +957,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...shadows.float,
   },
+  navBackPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }],
+  },
   navRightGroup: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -837,6 +979,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  navIconBtnPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.96 }],
   },
   navDivider: {
     width: 1,
@@ -1163,6 +1309,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.background.tertiary,
   },
+  stepperBtnPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }],
+  },
   stepperBtnText: {
     fontSize: 20,
     fontWeight: '300',
@@ -1174,6 +1324,87 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text.primary,
+  },
+  restockBtn: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+  },
+  restockText: {
+    ...typography.bodySmall,
+    color: colors.accent.primary,
+    fontWeight: '600',
+  },
+  qtyOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.screen,
+  },
+  qtyCard: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 16,
+    backgroundColor: colors.background.primary,
+    padding: spacing.lg,
+  },
+  qtyTitle: {
+    ...typography.h3,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
+  },
+  qtyDisplay: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.background.tertiary,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.lg,
+    alignItems: 'center',
+  },
+  qtyDisplayText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  keypadRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  keypadKey: {
+    flex: 1,
+    marginHorizontal: 4,
+    borderRadius: 999,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background.tertiary,
+  },
+  keypadKeyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  keypadOkKey: {
+    backgroundColor: colors.accent.primary,
+  },
+  keypadOkText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.onAccent,
+  },
+  qtyCancel: {
+    marginTop: spacing.sm,
+    alignSelf: 'center',
+  },
+  qtyCancelText: {
+    ...typography.bodySmall,
+    color: colors.text.secondary,
   },
   aiNote: {
     flexDirection: 'row',
@@ -1225,10 +1456,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
+  bottomPrimaryPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.97 }],
+  },
   bottomPrimaryText: {
     ...typography.body,
     fontWeight: '600',
     color: colors.text.onAccent,
+  },
+  bottomIconBtnPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }],
   },
   menuOverlay: {
     flex: 1,
